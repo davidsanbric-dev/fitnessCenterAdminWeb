@@ -1,0 +1,532 @@
+<template>
+  <CrudPageTemplate
+    :title="localizedTitle"
+    :description="localizedDescription"
+    :columns="config.columns"
+    :rows="resource.rows.value"
+    :loading="resource.loading.value"
+    :page="resource.page.value"
+    :page-size="resource.pageSize.value"
+    :total="resource.total.value"
+    @refresh="resource.fetchPage(resource.page.value)"
+    @change-page="resource.fetchPage"
+  >
+    <template #actions>
+      <button
+        v-if="config.createAction"
+        class="btn btn-primary"
+        type="button"
+        :disabled="actionState.loading"
+        @click="onCreateAction"
+      >
+        {{ config.createAction.label }}
+      </button>
+    </template>
+
+    <template #filters>
+      <template v-for="filter in config.filters || []" :key="filter.key">
+        <label v-if="filter.type === 'text'" style="display: grid; gap: 0.2rem">
+          <small class="muted">{{ filter.label }}</small>
+          <input
+            class="input"
+            :value="String(resource.query.value[filter.key] || '')"
+            type="text"
+            :placeholder="filter.label"
+            @input="onTextFilterChange(filter.key, ($event.target as HTMLInputElement).value)"
+          >
+        </label>
+
+        <label v-else style="display: grid; gap: 0.2rem">
+          <small class="muted">{{ filter.label }}</small>
+          <select
+            class="input"
+            :value="String(resource.query.value[filter.key] || '')"
+            @change="onSelectFilterChange(filter.key, ($event.target as HTMLSelectElement).value)"
+          >
+            <option v-for="option in filter.options || []" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+      </template>
+    </template>
+
+    <template #table>
+      <CrudDataTable
+        :columns="config.columns"
+        :rows="resource.rows.value"
+        :row-actions="tableRowActions"
+        :actions-disabled="actionState.loading"
+        @row-action="onRowAction"
+      />
+    </template>
+  </CrudPageTemplate>
+
+  <CrudConfirmDialog
+    :open="actionState.confirmOpen"
+    :title="actionState.title"
+    :message="actionState.message"
+    :confirm-label="actionState.confirmLabel"
+    :loading="actionState.loading"
+    @cancel="closeActionDialog"
+    @confirm="executeAction"
+  />
+
+  <CrudActionFormDialog
+    :open="actionState.formOpen"
+    :title="actionState.title"
+    :description="actionState.message"
+    :confirm-label="actionState.confirmLabel"
+    :loading="actionState.loading"
+    :error="actionState.error"
+    :fields="selectedActionFormFields"
+    :initial-values="actionState.formInitialValues"
+    @cancel="closeActionDialog"
+    @submit="submitActionForm"
+  />
+</template>
+
+<script setup lang="ts">
+import {
+  computed,
+  reactive,
+  watch,
+} from 'vue'
+import { z } from 'zod'
+
+import type { ActionFormField } from '~/components/crud/ActionFormDialog.vue'
+
+import type { CrudResourceConfig } from '~/app/config/adminCrudResources'
+
+import { resolveToastMessage } from '~/app/config/toastMessages'
+import { resolveUiMessage } from '~/app/config/uiMessages'
+import { useApiClient } from '~/composables/useApiClient'
+
+const props = defineProps<{
+  config: CrudResourceConfig
+}>()
+
+const resource = useCrudResource(props.config.endpoint, {
+  requiresAuth: props.config.requiresAuth,
+})
+
+const api = useApiClient()
+const toasts = useToasts()
+const { locale } = useLocale()
+
+const localizedTitle = computed(() => {
+  if (props.config.titleKey) {
+    return resolveUiMessage(props.config.titleKey, locale.value)
+  }
+
+  return props.config.title
+})
+
+const localizedDescription = computed(() => {
+  if (props.config.descriptionKey) {
+    return resolveUiMessage(props.config.descriptionKey, locale.value)
+  }
+
+  return props.config.description
+})
+
+const tableRowActions = computed(() => (props.config.rowActions || []).map((item) => ({
+  key: item.key,
+  label: item.label,
+})))
+
+const actionState = reactive({
+  confirmOpen: false,
+  formOpen: false,
+  loading: false,
+  error: '',
+  title: 'Confirm Action',
+  message: 'Please confirm this action.',
+  confirmLabel: 'Confirm',
+  selectedActionKey: '',
+  selectedRow: null as Record<string, unknown> | null,
+  formValues: {} as Record<string, string | number>,
+  formInitialValues: {} as Record<string, string | number>,
+})
+
+const selectedAction = computed(() => {
+  if (props.config.createAction && props.config.createAction.key === actionState.selectedActionKey) {
+    return props.config.createAction
+  }
+
+  return (props.config.rowActions || []).find((item) => item.key === actionState.selectedActionKey) || null
+})
+
+const selectedActionFormFields = computed<ActionFormField[]>(() => selectedAction.value?.formFields || [])
+
+const resolvePathPlaceholders = (template: string, row: Record<string, unknown>) => {
+  return template.replace(/\{([^}]+)\}/g, (_, rawKey: string) => {
+    const key = rawKey.trim()
+    const value = row[key]
+    return encodeURIComponent(String(value ?? ''))
+  })
+}
+
+const resolvePathValue = (row: Record<string, unknown>, path: string): unknown => {
+  return path.split('.').reduce<unknown>((current, key) => {
+    if (current && typeof current === 'object') {
+      return (current as Record<string, unknown>)[key]
+    }
+
+    return undefined
+  }, row)
+}
+
+const interpolateMessageTemplate = (
+  template: string,
+  row: Record<string, unknown>,
+  values: Record<string, string | number>,
+  extraContext: Record<string, unknown> = {},
+) => {
+  return template.replace(/\{([^}]+)\}/g, (_, rawToken: string) => {
+    const token = rawToken.trim()
+
+    const fromValues = resolvePathValue(values as Record<string, unknown>, token)
+    if (fromValues !== undefined && fromValues !== null && String(fromValues).trim().length > 0) {
+      return String(fromValues)
+    }
+
+    const fromRow = resolvePathValue(row, token)
+    if (fromRow !== undefined && fromRow !== null && String(fromRow).trim().length > 0) {
+      return String(fromRow)
+    }
+
+    const fromExtra = resolvePathValue(extraContext, token)
+    if (fromExtra !== undefined && fromExtra !== null && String(fromExtra).trim().length > 0) {
+      return String(fromExtra)
+    }
+
+    return ''
+  })
+}
+
+const identifyRow = (row: Record<string, unknown>) => {
+  const keys = ['id', 'booking_id', 'membership_plan_id', 'trainer_id', 'discipline_id']
+  for (const key of keys) {
+    const value = row[key]
+    if (value !== undefined && value !== null && String(value) !== '') {
+      return `${key}:${String(value)}`
+    }
+  }
+
+  return ''
+}
+
+const applyOptimisticUpdate = (
+  actionKey: string,
+  method: string,
+  row: Record<string, unknown>,
+  payload: Record<string, unknown>,
+) => {
+  if (method === 'POST') {
+    return false
+  }
+
+  const marker = identifyRow(row)
+  if (!marker) {
+    return false
+  }
+
+  if (method === 'DELETE') {
+    resource.rows.value = resource.rows.value.filter((item) => identifyRow(item) !== marker)
+    return true
+  }
+
+  let patch: Record<string, unknown> = {
+    ...payload,
+  }
+
+  if (actionKey === 'mark_read') {
+    patch = { ...patch, is_read: true }
+  }
+
+  resource.rows.value = resource.rows.value.map((item) => {
+    if (identifyRow(item) !== marker) {
+      return item
+    }
+
+    return {
+      ...item,
+      ...patch,
+    }
+  })
+
+  return true
+}
+
+const resolveSuccessMessage = (
+  action: NonNullable<typeof selectedAction.value>,
+  row: Record<string, unknown>,
+  values: Record<string, string | number>,
+) => {
+  if (typeof action.successMessageKey === 'string' && action.successMessageKey.trim().length > 0) {
+    const keyTemplate = resolveToastMessage(action.successMessageKey, locale.value)
+    if (keyTemplate.trim().length > 0) {
+      const message = interpolateMessageTemplate(keyTemplate, row, values)
+      if (message.trim().length > 0) {
+        return message
+      }
+    }
+  }
+
+  if (typeof action.successMessage === 'function') {
+    const message = action.successMessage(row, values)
+    return String(message || `${action.label} completed.`)
+  }
+
+  if (typeof action.successMessage === 'string' && action.successMessage.trim().length > 0) {
+    const message = interpolateMessageTemplate(action.successMessage, row, values)
+    return message.trim().length > 0 ? message : `${action.label} completed.`
+  }
+
+  return `${action.label} completed.`
+}
+
+const extractErrorMessage = (error: unknown) => {
+  if (error && typeof error === 'object') {
+    const asRecord = error as Record<string, unknown>
+
+    const data = asRecord.data
+    if (data && typeof data === 'object') {
+      const dataRecord = data as Record<string, unknown>
+      if (typeof dataRecord.detail === 'string' && dataRecord.detail.trim().length > 0) {
+        return dataRecord.detail
+      }
+
+      if (typeof dataRecord.message === 'string' && dataRecord.message.trim().length > 0) {
+        return dataRecord.message
+      }
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  return 'Action failed.'
+}
+
+const resolveErrorMessage = (
+  action: NonNullable<typeof selectedAction.value>,
+  row: Record<string, unknown>,
+  values: Record<string, string | number>,
+  error: unknown,
+  baseErrorMessage: string,
+) => {
+  if (typeof action.errorMessageKey === 'string' && action.errorMessageKey.trim().length > 0) {
+    const keyTemplate = resolveToastMessage(action.errorMessageKey, locale.value)
+    if (keyTemplate.trim().length > 0) {
+      const message = interpolateMessageTemplate(keyTemplate, row, values, {
+        error_message: baseErrorMessage,
+      })
+      if (message.trim().length > 0) {
+        return message
+      }
+    }
+  }
+
+  if (typeof action.errorMessage === 'function') {
+    const message = action.errorMessage(row, values, error)
+    if (String(message || '').trim().length > 0) {
+      return message
+    }
+  }
+
+  if (typeof action.errorMessage === 'string' && action.errorMessage.trim().length > 0) {
+    const message = interpolateMessageTemplate(action.errorMessage, row, values, {
+      error_message: baseErrorMessage,
+    })
+    return message.trim().length > 0 ? message : baseErrorMessage
+  }
+
+  return baseErrorMessage
+}
+
+const toFieldInitialValue = (value: unknown): string | number => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).join(', ')
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false'
+  }
+
+  if (typeof value === 'number') {
+    return value
+  }
+
+  return String(value ?? '')
+}
+
+const openActionFlow = (actionKey: string, row: Record<string, unknown>) => {
+  const action =
+    (props.config.createAction && props.config.createAction.key === actionKey
+      ? props.config.createAction
+      : (props.config.rowActions || []).find((item) => item.key === actionKey)) || null
+
+  if (!action) {
+    return
+  }
+
+  actionState.selectedActionKey = actionKey
+  actionState.selectedRow = row
+  actionState.title = action.label
+  actionState.message = action.confirmMessage || `Confirm action: ${action.label}?`
+  actionState.confirmLabel = action.label
+  actionState.error = ''
+  actionState.formValues = {}
+  actionState.formInitialValues = {}
+
+  for (const field of action.formFields || []) {
+    if (field.fromRowPath) {
+      const rowValue = resolvePathValue(row, field.fromRowPath)
+      actionState.formInitialValues[field.key] = toFieldInitialValue(rowValue)
+    } else if (field.defaultValue !== undefined) {
+      actionState.formInitialValues[field.key] = field.defaultValue
+    }
+  }
+
+  if ((action.formFields || []).length > 0) {
+    actionState.formOpen = true
+    actionState.confirmOpen = false
+  } else {
+    actionState.confirmOpen = true
+    actionState.formOpen = false
+  }
+}
+
+const onTextFilterChange = async (key: string, value: string) => {
+  resource.updateQuery(key, value.trim())
+  await resource.fetchPage(1)
+}
+
+const onSelectFilterChange = async (key: string, value: string) => {
+  if (value === 'true') {
+    resource.updateQuery(key, true)
+  } else if (value === 'false') {
+    resource.updateQuery(key, false)
+  } else {
+    resource.updateQuery(key, value)
+  }
+  await resource.fetchPage(1)
+}
+
+const onRowAction = async (actionKey: string, row: Record<string, unknown>) => {
+  openActionFlow(actionKey, row)
+}
+
+const onCreateAction = () => {
+  if (!props.config.createAction) {
+    return
+  }
+
+  openActionFlow(props.config.createAction.key, {})
+}
+
+const closeActionDialog = () => {
+  if (actionState.loading) {
+    return
+  }
+
+  actionState.confirmOpen = false
+  actionState.formOpen = false
+  actionState.selectedActionKey = ''
+  actionState.selectedRow = null
+  actionState.error = ''
+  actionState.formValues = {}
+  actionState.formInitialValues = {}
+}
+
+const executeAction = async () => {
+  const action = selectedAction.value
+  if (!action || !actionState.selectedRow) {
+    closeActionDialog()
+    return
+  }
+
+  actionState.loading = true
+  actionState.error = ''
+  const previousRows = [...resource.rows.value]
+  let usedOptimisticUpdate = false
+
+  try {
+    const path = resolvePathPlaceholders(action.pathTemplate, actionState.selectedRow)
+    const payload = action.payload(actionState.selectedRow, actionState.formValues)
+
+    const payloadSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+    if (Object.keys(payload).length > 0) {
+      payloadSchema.parse(payload)
+    }
+
+    usedOptimisticUpdate = applyOptimisticUpdate(
+      action.key,
+      action.method,
+      actionState.selectedRow,
+      payload,
+    )
+
+    await api.request(path, {
+      method: action.method,
+      body: Object.keys(payload).length > 0 ? payload : undefined,
+      requiresAuth: props.config.requiresAuth ?? true,
+    })
+
+    if (!usedOptimisticUpdate) {
+      await resource.fetchPage(resource.page.value)
+    }
+
+    toasts.pushSuccess(resolveSuccessMessage(action, actionState.selectedRow, actionState.formValues))
+    closeActionDialog()
+  } catch (error) {
+    if (usedOptimisticUpdate) {
+      resource.rows.value = previousRows
+    }
+
+    const baseErrorMessage = extractErrorMessage(error)
+    const errorMessage = resolveErrorMessage(
+      action,
+      actionState.selectedRow,
+      actionState.formValues,
+      error,
+      baseErrorMessage,
+    )
+    actionState.error = errorMessage
+    toasts.pushError(errorMessage)
+  } finally {
+    actionState.loading = false
+  }
+}
+
+const submitActionForm = async (values: Record<string, string | number>) => {
+  actionState.formValues = values
+
+  const requiredFields = selectedActionFormFields.value.filter((field) => field.required)
+  const hasMissing = requiredFields.some((field) => {
+    const value = values[field.key]
+    return value === '' || value === undefined || value === null
+  })
+
+  if (hasMissing) {
+    actionState.error = 'Please fill in all required fields.'
+    return
+  }
+
+  actionState.confirmOpen = true
+  actionState.formOpen = false
+}
+
+watch(
+  () => props.config.endpoint,
+  async () => {
+    await resource.fetchPage(1)
+  },
+  {
+    immediate: true,
+  },
+)
+</script>
