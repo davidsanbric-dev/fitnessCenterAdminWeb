@@ -32,13 +32,13 @@ Optional:
 - `NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
 
 The app also accepts `FIREBASE_*` and `VITE_FIREBASE_*` names as fallbacks.
-After updating env vars, restart `npm run dev`.
+After updating env vars, restart `bun run dev`.
 
 ## Run
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 App URL: `http://localhost:3000`
@@ -46,8 +46,8 @@ App URL: `http://localhost:3000`
 ## Build
 
 ```bash
-npm run build
-npm run preview
+bun run build
+bun run preview
 ```
 
 ## Key routes

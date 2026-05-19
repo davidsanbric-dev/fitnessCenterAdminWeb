@@ -50,15 +50,53 @@ export const useAuth = () => {
       return
     }
 
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY)
-    const storedUser = localStorage.getItem(AUTH_USER_KEY)
+    try {
+      const storedToken = localStorage.getItem(AUTH_TOKEN_KEY)
+      const storedUser = localStorage.getItem(AUTH_USER_KEY)
 
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      user.value = JSON.parse(storedUser) as AuthUser
+      if (storedToken && storedUser) {
+        token.value = storedToken
+        user.value = JSON.parse(storedUser) as AuthUser
+      }
+    } catch {
+      token.value = null
+      user.value = null
+      localStorage.removeItem(AUTH_TOKEN_KEY)
+      localStorage.removeItem(AUTH_USER_KEY)
     }
 
     ready.value = true
+  }
+
+  const decodeJwtPayload = (rawToken: string) => {
+    try {
+      const [, payload] = rawToken.split('.')
+      if (!payload || typeof window === 'undefined') {
+        return null
+      }
+
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+      const decoded = window.atob(padded)
+      return JSON.parse(decoded) as { exp?: number }
+    } catch {
+      return null
+    }
+  }
+
+  const isTokenExpired = (rawToken: string) => {
+    const payload = decodeJwtPayload(rawToken)
+    if (!payload?.exp) {
+      return false
+    }
+
+    return Date.now() / 1000 >= payload.exp
+  }
+
+  const clearAuth = () => {
+    token.value = null
+    user.value = null
+    persist()
   }
 
   const persist = () => {
@@ -134,9 +172,7 @@ export const useAuth = () => {
       await signOut(firebaseAuth)
     }
 
-    token.value = null
-    user.value = null
-    persist()
+    clearAuth()
     await navigateTo('/login')
   }
 
@@ -148,6 +184,8 @@ export const useAuth = () => {
     isAuthenticated,
     isAdmin,
     hydrateFromStorage,
+    isTokenExpired,
+    clearAuth,
     loginWithFirebase,
     logout,
   }

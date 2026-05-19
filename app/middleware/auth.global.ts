@@ -5,6 +5,9 @@ export default defineNuxtRouteMiddleware((to) => {
 
   if (import.meta.client) {
     auth.hydrateFromStorage()
+    if (auth.token.value && auth.isTokenExpired(auth.token.value)) {
+      auth.clearAuth()
+    }
   }
 
   if (to.path === '/login' && auth.isAuthenticated.value) {

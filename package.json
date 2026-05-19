@@ -2,6 +2,7 @@
   "name": "project_web_app",
   "type": "module",
   "private": true,
+  "packageManager": "bun@1.2.12",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
