@@ -31,7 +31,6 @@ Optional:
 
 - `NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
 
-The app also accepts `FIREBASE_*` and `VITE_FIREBASE_*` names as fallbacks.
 After updating env vars, restart `bun run dev`.
 
 ## Run
@@ -49,6 +48,35 @@ App URL: `http://localhost:3000`
 bun run build
 bun run preview
 ```
+
+## Docker (Dokploy)
+
+```bash
+docker build -t fitness-admin-web .
+docker run -p 3000:3000 \
+	-e NUXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1 \
+	-e NUXT_PUBLIC_FIREBASE_API_KEY=... \
+	-e NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN=... \
+	-e NUXT_PUBLIC_FIREBASE_PROJECT_ID=... \
+	-e NUXT_PUBLIC_FIREBASE_APP_ID=... \
+	-e NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=... \
+	fitness-admin-web
+```
+
+## Dokploy deployment notes
+
+- Service port: `3000`
+- Start command (already in Dockerfile): `node .output/server/index.mjs`
+- Required env vars:
+	- `NUXT_PUBLIC_API_BASE_URL`
+	- `NUXT_PUBLIC_FIREBASE_API_KEY`
+	- `NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+	- `NUXT_PUBLIC_FIREBASE_PROJECT_ID`
+	- `NUXT_PUBLIC_FIREBASE_APP_ID`
+- Optional env vars:
+	- `NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- Health endpoint: `GET /api/health`
+- After updating env vars, redeploy the service to pick up changes
 
 ## Key routes
 
