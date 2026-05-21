@@ -5,8 +5,8 @@
       <p class="muted" style="margin-bottom: 0.85rem">{{ description }}</p>
 
       <form style="display: grid; gap: 0.7rem" @submit.prevent="$emit('submit', formValues)">
-        <label v-for="field in fields" :key="field.key" style="display: grid; gap: 0.25rem">
-          <small class="muted">{{ field.label }}</small>
+        <template v-for="field in fields" :key="field.key" style="display: grid; gap: 0.25rem">
+          <small class="muted">{{ field.labelKey ? t(field.labelKey) : field.label }}</small>
 
           <select
             v-if="field.type === 'select'"
@@ -16,14 +16,14 @@
             @change="setValue(field.key, ($event.target as HTMLSelectElement).value)"
           >
             <option v-for="option in field.options || []" :key="option.value" :value="option.value">
-              {{ option.label }}
+              {{ option.labelKey ? t(option.labelKey) : option.label }}
             </option>
           </select>
 
           <textarea
             v-else-if="field.type === 'textarea'"
             class="input"
-            :placeholder="field.placeholder || ''"
+            :placeholder="field.placeholderKey ? t(field.placeholderKey) : (field.placeholder || '')"
             :value="String(formValues[field.key] || '')"
             :disabled="loading"
             rows="3"
@@ -34,12 +34,12 @@
             v-else
             class="input"
             :type="field.type === 'number' ? 'number' : 'text'"
-            :placeholder="field.placeholder || ''"
+            :placeholder="field.placeholderKey ? t(field.placeholderKey) : (field.placeholder || '')"
             :value="String(formValues[field.key] || '')"
             :disabled="loading"
             @input="setValue(field.key, ($event.target as HTMLInputElement).value)"
           >
-        </label>
+        </template>
 
         <small v-if="error" style="color: var(--danger)">{{ error }}</small>
 
@@ -62,10 +62,12 @@ import { resolveUiMessage } from '~/app/config/uiMessages'
 export interface ActionFormField {
   key: string
   label: string
+  labelKey?: string
   type: 'text' | 'textarea' | 'select' | 'number'
   required?: boolean
   placeholder?: string
-  options?: Array<{ label: string; value: string }>
+  placeholderKey?: string
+  options?: Array<{ label: string; value: string; labelKey?: string }>
   defaultValue?: string | number
 }
 

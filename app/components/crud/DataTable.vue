@@ -43,6 +43,7 @@ import { resolveUiMessage } from '~/app/config/uiMessages'
 interface CrudColumn {
   key: string
   label: string
+  labelKey?: string
   type?: 'text' | 'date' | 'datetime' | 'boolean'
 }
 

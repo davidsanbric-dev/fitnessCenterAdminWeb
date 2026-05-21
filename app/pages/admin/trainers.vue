@@ -5,5 +5,5 @@
 <script setup lang="ts">
 import { adminCrudResources } from '~/app/config/adminCrudResources'
 
-const resourceConfig = adminCrudResources.trainers
+const resourceConfig = adminCrudResources.trainers!
 </script>

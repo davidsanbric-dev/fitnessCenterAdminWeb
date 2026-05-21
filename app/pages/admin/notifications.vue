@@ -5,5 +5,5 @@
 <script setup lang="ts">
 import { adminCrudResources } from '~/app/config/adminCrudResources'
 
-const resourceConfig = adminCrudResources.notifications
+const resourceConfig = adminCrudResources.notifications!
 </script>

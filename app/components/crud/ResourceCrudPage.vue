@@ -19,32 +19,32 @@
         :disabled="actionState.loading"
         @click="onCreateAction"
       >
-        {{ config.createAction.label }}
+        {{ createButtonLabel }}
       </button>
     </template>
 
     <template #filters>
       <template v-for="filter in config.filters || []" :key="filter.key">
-        <label v-if="filter.type === 'text'" style="display: grid; gap: 0.2rem">
-          <small class="muted">{{ filter.label }}</small>
+        <label v-if="isTextFilter(filter)" style="display: grid; gap: 0.2rem">
+          <small class="muted">{{ filterLabel(filter) }}</small>
           <input
             class="input"
             :value="String(resource.query.value[filter.key] || '')"
             type="text"
-            :placeholder="filter.label"
+            :placeholder="filterLabel(filter)"
             @input="onTextFilterChange(filter.key, ($event.target as HTMLInputElement).value)"
           >
         </label>
 
         <label v-else style="display: grid; gap: 0.2rem">
-          <small class="muted">{{ filter.label }}</small>
+          <small class="muted">{{ filterLabel(filter) }}</small>
           <select
             class="input"
             :value="String(resource.query.value[filter.key] || '')"
             @change="onSelectFilterChange(filter.key, ($event.target as HTMLSelectElement).value)"
           >
             <option v-for="option in filter.options || []" :key="option.value" :value="option.value">
-              {{ option.label }}
+              {{ filterOptionLabel(option as { labelKey?: string; label: string }) }}
             </option>
           </select>
         </label>
@@ -53,7 +53,7 @@
 
     <template #table>
       <CrudDataTable
-        :columns="config.columns"
+        :columns="localizedColumns"
         :rows="resource.rows.value"
         :row-actions="tableRowActions"
         :actions-disabled="actionState.loading"
@@ -96,7 +96,9 @@ import { z } from 'zod'
 
 import type { ActionFormField } from '~/components/crud/ActionFormDialog.vue'
 
-import type { CrudResourceConfig } from '~/app/config/adminCrudResources'
+import type { CrudColumn, CrudResourceConfig } from '~/app/config/adminCrudResources'
+
+import { isTextFilter } from '~/app/config/adminCrudResources'
 
 import { resolveToastMessage } from '~/app/config/toastMessages'
 import { resolveUiMessage } from '~/app/config/uiMessages'
@@ -113,6 +115,7 @@ const resource = useCrudResource(props.config.endpoint, {
 const api = useApiClient()
 const toasts = useToasts()
 const { locale } = useLocale()
+const t = (key: string) => resolveUiMessage(key, locale.value)
 
 const localizedTitle = computed(() => {
   if (props.config.titleKey) {
@@ -130,19 +133,43 @@ const localizedDescription = computed(() => {
   return props.config.description
 })
 
+const localizedColumns = computed(() => {
+  type CrudColumnWithLabelKey = CrudColumn & { labelKey: string }
+
+  return (props.config.columns || []).map((col): CrudColumn => ({
+    ...col,
+    label: (col as CrudColumnWithLabelKey).labelKey
+      ? resolveUiMessage((col as CrudColumnWithLabelKey).labelKey, locale.value)
+      : col.label,
+  }))
+})
+
 const tableRowActions = computed(() => (props.config.rowActions || []).map((item) => ({
   key: item.key,
-  label: item.label,
+  label: item.labelKey ? resolveUiMessage(item.labelKey, locale.value) : (item.label || ''),
 })))
+
+const createButtonLabel = computed(() => {
+  if (!props.config.createAction) return ''
+  return props.config.createAction.labelKey
+    ? resolveUiMessage(props.config.createAction.labelKey, locale.value)
+    : props.config.createAction.label
+})
+
+const filterLabel = (filter: { labelKey?: string; label: string }) =>
+  filter.labelKey ? resolveUiMessage(filter.labelKey, locale.value) : filter.label
+
+const filterOptionLabel = (option: { labelKey?: string; label: string }) =>
+  option.labelKey ? resolveUiMessage(option.labelKey, locale.value) : option.label
 
 const actionState = reactive({
   confirmOpen: false,
   formOpen: false,
   loading: false,
   error: '',
-  title: 'Confirm Action',
-  message: 'Please confirm this action.',
-  confirmLabel: 'Confirm',
+  title: t('action_state_title'),
+  message: t('action_state_message'),
+  confirmLabel: t('action_state_confirm_label'),
   selectedActionKey: '',
   selectedRow: null as Record<string, unknown> | null,
   formValues: {} as Record<string, string | number>,
@@ -157,7 +184,10 @@ const selectedAction = computed(() => {
   return (props.config.rowActions || []).find((item) => item.key === actionState.selectedActionKey) || null
 })
 
-const selectedActionFormFields = computed<ActionFormField[]>(() => selectedAction.value?.formFields || [])
+const selectedActionFormFields = computed<ActionFormField[]>(() => {
+  const hasFields = (selectedAction.value as { formFields?: ActionFormField[] })?.formFields
+  return hasFields || []
+})
 
 const resolvePathPlaceholders = (template: string, row: Record<string, unknown>) => {
   return template.replace(/\{([^}]+)\}/g, (_, rawKey: string) => {
@@ -308,7 +338,7 @@ const extractErrorMessage = (error: unknown) => {
     return error.message
   }
 
-  return 'Action failed.'
+  return t('action_error_failed')
 }
 
 const resolveErrorMessage = (
@@ -375,9 +405,14 @@ const openActionFlow = (actionKey: string, row: Record<string, unknown>) => {
 
   actionState.selectedActionKey = actionKey
   actionState.selectedRow = row
-  actionState.title = action.label
-  actionState.message = action.confirmMessage || `Confirm action: ${action.label}?`
-  actionState.confirmLabel = action.label
+  const resolvedLabel = action.labelKey
+    ? resolveUiMessage(action.labelKey, locale.value)
+    : (action.label || '')
+  actionState.title = resolvedLabel
+  actionState.confirmLabel = resolvedLabel
+  actionState.message = action.confirmMessageKey
+    ? resolveUiMessage(action.confirmMessageKey, locale.value)
+    : (action.confirmMessage || `Confirm action: ${resolvedLabel}?`)
   actionState.error = ''
   actionState.formValues = {}
   actionState.formInitialValues = {}
@@ -512,7 +547,7 @@ const submitActionForm = async (values: Record<string, string | number>) => {
   })
 
   if (hasMissing) {
-    actionState.error = 'Please fill in all required fields.'
+    actionState.error = t('action_error_required_fields')
     return
   }
 
@@ -527,6 +562,28 @@ watch(
   },
   {
     immediate: true,
+  },
+)
+
+watch(
+  () => locale.value,
+  () => {
+    // Re-resolve dialog strings when locale switches so open dialogs update live.
+    const action =
+      (props.config.createAction && props.config.createAction.key === actionState.selectedActionKey
+        ? props.config.createAction
+        : (props.config.rowActions || []).find((item) => item.key === actionState.selectedActionKey)) || null
+
+    if (action) {
+      const resolvedLabel: string = action.labelKey
+        ? resolveUiMessage(action.labelKey, locale.value)
+        : (action.label || '')
+      actionState.title = resolvedLabel
+      actionState.message = action.confirmMessageKey
+        ? resolveUiMessage(action.confirmMessageKey, locale.value)
+        : (action.confirmMessage || `Confirm action: ${resolvedLabel}?`)
+      actionState.confirmLabel = resolvedLabel
+    }
   },
 )
 </script>
