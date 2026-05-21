@@ -1,8 +1,9 @@
 <template>
   <aside class="app-sidebar-right">
     <div class="panel" style="padding: 0.8rem">
-      <strong>{{ t('sidebar_title') }}</strong>
-      <p class="muted" style="margin: 0.35rem 0 0">{{ t('sidebar_subtitle') }}</p>
+      <!-- <strong>{{ t('sidebar_title') }}</strong>
+      <p class="muted" style="margin: 0.35rem 0 0">{{ t('sidebar_subtitle') }}</p> -->
+      <AppLogo :size="60" />
     </div>
 
     <nav class="nav-list">
@@ -23,6 +24,7 @@
 <script setup lang="ts">
 import { resolveUiMessage } from '~/app/config/uiMessages'
 import { Home, Calendar, User, Dumbbell, CreditCard, Bell } from 'lucide-vue-next'
+import AppLogo from '../icons/AppLogo.vue'
 
 const route = useRoute()
 const { locale } = useLocale()
