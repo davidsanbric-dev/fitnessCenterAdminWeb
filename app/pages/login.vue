@@ -1,7 +1,7 @@
 <template>
   <section class="panel" style="max-width: 440px; margin: 10vh auto; padding: 1rem">
     <h2 class="section-title">Admin Login</h2>
-    <p class="section-subtitle">Firebase credentials + backend role lookup by email.</p>
+    <!-- <p class="section-subtitle">Firebase credentials + backend role lookup by email.</p> -->
 
     <form style="display: grid; gap: 0.6rem; margin-top: 1rem" @submit.prevent="onSubmit">
       <input v-model="email" class="input" type="email" placeholder="Email" required />
