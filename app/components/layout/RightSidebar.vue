@@ -1,8 +1,7 @@
 <template>
-  <aside class="app-sidebar-right">
+  <div v-if="isOpen" class="sidebar-backdrop" @click="closeSidebar" />
+  <aside class="app-sidebar-right" :class="{ 'is-open': isOpen }">
     <div class="panel" style="padding: 0.8rem">
-      <!-- <strong>{{ t('sidebar_title') }}</strong>
-      <p class="muted" style="margin: 0.35rem 0 0">{{ t('sidebar_subtitle') }}</p> -->
       <AppLogo :size="60" />
     </div>
 
@@ -13,11 +12,34 @@
         :to="item.to"
         class="nav-link"
         :class="{ active: route.path === item.to }"
+        @click="closeSidebar"
       >
         <component :is="item.icon" class="nav-icon" />
         {{ t(item.label) }}
       </NuxtLink>
     </nav>
+
+    <div class="sidebar-footer">
+      <label class="sidebar-setting-row">
+        <small class="muted">{{ t('language_label') }}</small>
+        <select
+          class="input locale-select"
+          :value="locale"
+          @change="setLocale(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+      </label>
+      <label class="sidebar-setting-row">
+        <small class="muted">{{ t('theme_label') }}</small>
+        <button class="btn" type="button" @click="toggleTheme">{{ themeLabel }}</button>
+      </label>
+      <div class="sidebar-user">
+        <span class="muted sidebar-email">{{ auth.user.value?.email || t('guest_user') }}</span>
+        <button class="btn" @click="auth.logout">{{ t('logout') }}</button>
+      </div>
+    </div>
   </aside>
 </template>
 
@@ -25,11 +47,17 @@
 import { resolveUiMessage } from '~/app/config/uiMessages'
 import { Home, Calendar, User, Dumbbell, CreditCard, Bell } from 'lucide-vue-next'
 import AppLogo from '../icons/AppLogo.vue'
+import { useSidebar } from '~/composables/useSidebar'
+import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
-const { locale } = useLocale()
+const { locale, setLocale } = useLocale()
+const { theme, toggleTheme } = useTheme()
+const { isOpen, closeSidebar } = useSidebar()
+const auth = useAuth()
 
 const t = (key: string) => resolveUiMessage(key, locale.value)
+const themeLabel = computed(() => (theme.value === 'dark' ? t('theme_switch_light') : t('theme_switch_dark')))
 
 const navItems = [
   { label: 'nav_home', to: '/admin/home', icon: Home },
@@ -68,5 +96,34 @@ const navItems = [
 .nav-link.active {
   background-color: rgba(0, 0, 0, 0.1);
   font-weight: 500;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sidebar-setting-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.4rem;
+}
+
+.sidebar-email {
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 </style>
