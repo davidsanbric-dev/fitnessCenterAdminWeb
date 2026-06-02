@@ -1,8 +1,12 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
 import {
   getAuth,
+  onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  type Auth,
 } from 'firebase/auth'
 import { computed } from 'vue'
 import {
@@ -35,6 +39,20 @@ interface FirebaseLoginResponse {
 
 const AUTH_TOKEN_KEY = 'fitness_admin_token'
 const AUTH_USER_KEY = 'fitness_admin_user'
+
+/**
+ * Thrown when a user signs in with Firebase but has not verified their email.
+ * The backend rejects unverified ID tokens with `403 Email not verified`, so we
+ * block before calling `firebase-login` and let the UI offer a resend action.
+ */
+export class EmailNotVerifiedError extends Error {
+  code = 'email-not-verified'
+
+  constructor() {
+    super('Email not verified')
+    this.name = 'EmailNotVerifiedError'
+  }
+}
 
 export const useAuth = () => {
   const token = useState<string | null>('auth-token', () => null)
@@ -113,7 +131,7 @@ export const useAuth = () => {
     }
   }
 
-  const getFirebaseAuthClient = () => {
+  const getFirebaseAuthClient = (): Auth => {
     const config = useRuntimeConfig()
 
     if (getApps().length === 0) {
@@ -125,7 +143,7 @@ export const useAuth = () => {
 
       if (!firebaseApiKey || !firebaseAuthDomain || !firebaseProjectId || !firebaseAppId) {
         throw new Error(
-          'Firebase web config is missing. Set NUXT_PUBLIC_FIREBASE_API_KEY, NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NUXT_PUBLIC_FIREBASE_PROJECT_ID, and NUXT_PUBLIC_FIREBASE_APP_ID in project_web_app/project_web_app/.env and restart the dev server.',
+          'Firebase web config is missing. Set NUXT_PUBLIC_FIREBASE_API_KEY, NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NUXT_PUBLIC_FIREBASE_PROJECT_ID, and NUXT_PUBLIC_FIREBASE_APP_ID in project_web_app/.env and restart the dev server.',
         )
       }
 
@@ -141,13 +159,49 @@ export const useAuth = () => {
     return getAuth(getApp())
   }
 
+  /**
+   * Returns the current Firebase ID token. The Firebase SDK auto-refreshes near
+   * expiry; pass `forceRefresh` to mint a new token immediately (e.g. after a
+   * `401 Token expired`, or after `firebase-login` writes custom claims). Falls
+   * back to the persisted token when the SDK user has not rehydrated yet.
+   */
+  const getIdToken = async (forceRefresh = false): Promise<string | null> => {
+    if (typeof window === 'undefined') {
+      return token.value
+    }
+
+    try {
+      const currentUser = getFirebaseAuthClient().currentUser
+      if (currentUser) {
+        const freshToken = await currentUser.getIdToken(forceRefresh)
+        token.value = freshToken
+        persist()
+        return freshToken
+      }
+    } catch {
+      // Fall back to the persisted token below.
+    }
+
+    return token.value
+  }
+
   const loginWithFirebase = async (email: string, password: string) => {
     loading.value = true
 
     try {
       const firebaseAuth = getFirebaseAuthClient()
       const credentials = await signInWithEmailAndPassword(firebaseAuth, email, password)
-      const idToken = await credentials.user.getIdToken(true)
+
+      // Refresh the user record so `emailVerified` reflects a just-clicked link.
+      await credentials.user.reload()
+      if (!credentials.user.emailVerified) {
+        // Keep the Firebase session so the UI can resend the verification email,
+        // but do not establish an app session against an unverified account.
+        throw new EmailNotVerifiedError()
+      }
+
+      // 1) ID token as-is for the exchange (no force-refresh needed yet).
+      const idToken = await credentials.user.getIdToken()
 
       const api = useApiClient()
       const response = await api.post<FirebaseLoginResponse>(
@@ -156,8 +210,11 @@ export const useAuth = () => {
         false,
       )
 
-      token.value = idToken
       user.value = response.user
+
+      // 2) firebase-login wrote custom claims (app_role, etc.); force-refresh so
+      //    subsequent protected calls carry an up-to-date token. See spec §5.4.
+      token.value = await credentials.user.getIdToken(true)
       persist()
 
       return response
@@ -166,14 +223,68 @@ export const useAuth = () => {
     }
   }
 
+  /** Resend the verification email to the currently signed-in Firebase user. */
+  const resendVerificationEmail = async () => {
+    const currentUser = getFirebaseAuthClient().currentUser
+    if (!currentUser) {
+      throw new Error('No signed-in user to verify. Please sign in again.')
+    }
+    await sendEmailVerification(currentUser)
+  }
+
+  /** Trigger a Firebase password-reset email (forgot-password flow, spec §5.6). */
+  const requestPasswordReset = async (email: string) => {
+    await sendPasswordResetEmail(getFirebaseAuthClient(), email)
+  }
+
+  /** Sign out of Firebase and drop the app session, then route to login. */
   const logout = async () => {
     if (typeof window !== 'undefined') {
-      const firebaseAuth = getFirebaseAuthClient()
-      await signOut(firebaseAuth)
+      try {
+        await signOut(getFirebaseAuthClient())
+      } catch {
+        // Ignore sign-out errors; we clear local state regardless.
+      }
     }
 
     clearAuth()
     await navigateTo('/login')
+  }
+
+  /**
+   * Handle an invalidated session (revoked/invalid token): drop local state and
+   * route to login. Used by the API client when the backend rejects the token.
+   */
+  const handleSessionExpired = async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        await signOut(getFirebaseAuthClient())
+      } catch {
+        // Ignore; clearing local state is what matters.
+      }
+    }
+
+    clearAuth()
+    await navigateTo('/login')
+  }
+
+  /**
+   * Keep the app token in sync with the Firebase SDK after a page reload, and
+   * clear the app session when Firebase reports the user signed out.
+   */
+  const initAuthListener = () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    onAuthStateChanged(getFirebaseAuthClient(), async (currentUser) => {
+      if (currentUser && user.value) {
+        token.value = await currentUser.getIdToken()
+        persist()
+      } else if (!currentUser) {
+        clearAuth()
+      }
+    })
   }
 
   return {
@@ -186,7 +297,12 @@ export const useAuth = () => {
     hydrateFromStorage,
     isTokenExpired,
     clearAuth,
+    getIdToken,
     loginWithFirebase,
+    resendVerificationEmail,
+    requestPasswordReset,
+    handleSessionExpired,
+    initAuthListener,
     logout,
   }
 }

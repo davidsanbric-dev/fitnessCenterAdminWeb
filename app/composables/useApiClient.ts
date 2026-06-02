@@ -11,9 +11,40 @@ interface RequestOptions {
   requiresAuth?: boolean
 }
 
+const extractStatus = (error: unknown): number | undefined => {
+  const err = error as { status?: number; statusCode?: number; response?: { status?: number } }
+  return err?.status ?? err?.statusCode ?? err?.response?.status
+}
+
+const extractDetail = (error: unknown): string | undefined => {
+  const err = error as { data?: { detail?: string }; response?: { _data?: { detail?: string } } }
+  return err?.data?.detail ?? err?.response?._data?.detail
+}
+
 export const useApiClient = () => {
   const config = useRuntimeConfig()
   const auth = useAuth()
+
+  const buildHeaders = async (requiresAuth: boolean): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      // Identifies the originating app so the backend can enforce that only
+      // staff (admin/manager) accounts sign in from the web app. See the API's
+      // ClientOrigin gate in /auth/firebase-login.
+      'X-Client-Platform': 'web',
+    }
+
+    if (requiresAuth) {
+      // Always attach the CURRENT Firebase ID token (the SDK auto-refreshes near
+      // expiry); fall back to the persisted token before the SDK rehydrates.
+      const idToken = await auth.getIdToken()
+      if (idToken) {
+        headers.Authorization = `Bearer ${idToken}`
+      }
+    }
+
+    return headers
+  }
 
   const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
     const {
@@ -23,20 +54,41 @@ export const useApiClient = () => {
       requiresAuth = true,
     } = options
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
+    const exec = async (headers: Record<string, string>): Promise<T> =>
+      await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
+        method,
+        query,
+        body: body as Record<string, unknown> | undefined,
+        headers,
+      }) as T
 
-    if (requiresAuth && auth.token.value) {
-      headers.Authorization = `Bearer ${auth.token.value}`
-    }
+    try {
+      return await exec(await buildHeaders(requiresAuth))
+    } catch (error) {
+      if (!requiresAuth) {
+        throw error
+      }
 
-    return await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
-      method,
-      query,
-      body,
-      headers,
-    })
+      const status = extractStatus(error)
+      const detail = extractDetail(error)
+
+      // Token expired → force-refresh once and retry the request (spec §5.3).
+      if (status === 401 && detail === 'Token expired') {
+        await auth.getIdToken(true)
+        return await exec(await buildHeaders(true))
+      }
+
+      // Revoked / invalid / missing session → sign out and route to login.
+      if (
+        status === 401
+        && ['Token revoked', 'Invalid Firebase token', 'Token missing email', 'User not found', 'Not authenticated']
+          .includes(detail || '')
+      ) {
+        await auth.handleSessionExpired()
+      }
+
+      throw error
+    }
   }
 
   return {
