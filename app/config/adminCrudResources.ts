@@ -165,7 +165,10 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     description: 'Reusable CRUD table powered by trainer catalog endpoint.',
     descriptionKey: 'resource_trainers_description',
     endpoint: '/trainers',
-    requiresAuth: false,
+    // Per-company data isolation: the trainer catalog is no longer public and
+    // returns 401 without a Firebase ID token. The backend scopes results to the
+    // authenticated user's company. See data_environment_isolation specs §3.1/§5.
+    requiresAuth: true,
     filters: [
       {
         key: 'search',
@@ -187,7 +190,10 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     description: 'Shared table template configured for discipline management.',
     descriptionKey: 'resource_disciplines_description',
     endpoint: '/disciplines',
-    requiresAuth: false,
+    // Per-company data isolation: the discipline catalog is no longer public and
+    // returns 401 without a Firebase ID token. The backend scopes results to the
+    // authenticated user's company. See data_environment_isolation specs §3.1/§5.
+    requiresAuth: true,
     filters: [
       {
         key: 'search',
