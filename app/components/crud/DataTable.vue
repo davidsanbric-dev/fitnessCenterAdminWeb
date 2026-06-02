@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { resolveUiMessage } from '~/app/config/uiMessages'
+import { resolveUiMessage } from '~/config/uiMessages'
 
 interface CrudColumn {
   key: string

@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { resolveUiMessage } from '~/app/config/uiMessages'
+import { resolveUiMessage } from '~/config/uiMessages'
 
 defineProps<{
   open: boolean

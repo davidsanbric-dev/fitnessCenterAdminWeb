@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { resolveUiMessage } from '~/app/config/uiMessages'
+import { resolveUiMessage } from '~/config/uiMessages'
 import { Home, Calendar, User, Dumbbell, CreditCard, Bell } from 'lucide-vue-next'
 import AppLogo from '../icons/AppLogo.vue'
 import { useSidebar } from '~/composables/useSidebar'

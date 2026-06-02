@@ -96,12 +96,12 @@ import { z } from 'zod'
 
 import type { ActionFormField } from '~/components/crud/ActionFormDialog.vue'
 
-import type { CrudColumn, CrudResourceConfig } from '~/app/config/adminCrudResources'
+import type { CrudColumn, CrudResourceConfig } from '~/config/adminCrudResources'
 
-import { isTextFilter } from '~/app/config/adminCrudResources'
+import { isTextFilter } from '~/config/adminCrudResources'
 
-import { resolveToastMessage } from '~/app/config/toastMessages'
-import { resolveUiMessage } from '~/app/config/uiMessages'
+import { resolveToastMessage } from '~/config/toastMessages'
+import { resolveUiMessage } from '~/config/uiMessages'
 import { useApiClient } from '~/composables/useApiClient'
 
 const props = defineProps<{

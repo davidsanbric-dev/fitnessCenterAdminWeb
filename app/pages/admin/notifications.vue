@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { adminCrudResources } from '~/app/config/adminCrudResources'
+import { adminCrudResources } from '~/config/adminCrudResources'
 
 const resourceConfig = adminCrudResources.notifications!
 </script>

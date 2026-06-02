@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 
-import { resolveUiMessage } from '~/app/config/uiMessages'
+import { resolveUiMessage } from '~/config/uiMessages'
 
 export interface ActionFormField {
   key: string
