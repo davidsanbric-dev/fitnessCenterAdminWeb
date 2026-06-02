@@ -12,8 +12,10 @@
           {{ auth.loading.value ? 'Signing in...' : 'Sign in' }}
         </button>
 
-        <small v-if="error" style="color: var(--danger)">{{ error }}</small>
-        <small v-if="info" style="color: var(--success, green)">{{ info }}</small>
+        <div style="min-height: 1.25rem">
+          <small v-if="error" style="color: var(--danger); word-break: break-word">{{ error }}</small>
+          <small v-if="info" style="color: var(--success, green); word-break: break-word">{{ info }}</small>
+        </div>
 
         <button
           v-if="needsVerification"
@@ -86,6 +88,17 @@ const mapError = (err: unknown): string => {
   }
   if (code === 'auth/too-many-requests') {
     return 'Too many attempts. Please try again later.'
+  }
+
+  // HTTP status fallback — prevents raw fetch error strings (e.g. "[POST] "...": 403") leaking to the UI.
+  const status = (err as { status?: number; statusCode?: number; response?: { status?: number } })?.status
+    ?? (err as { statusCode?: number })?.statusCode
+    ?? (err as { response?: { status?: number } })?.response?.status
+  if (status === 403 || status === 401) {
+    return 'Invalid email or password.'
+  }
+  if (status != null) {
+    return 'Authentication failed. Please try again.'
   }
 
   return err instanceof Error ? err.message : 'Authentication failed.'
