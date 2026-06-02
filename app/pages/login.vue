@@ -14,28 +14,8 @@
 
         <div style="min-height: 1.25rem">
           <small v-if="error" style="color: var(--danger); word-break: break-word">{{ error }}</small>
-          <small v-if="info" style="color: var(--success, green); word-break: break-word">{{ info }}</small>
         </div>
 
-        <button
-          v-if="needsVerification"
-          type="button"
-          class="btn"
-          :disabled="busy"
-          @click="onResendVerification"
-        >
-          Resend verification email
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-link"
-          style="background: none; border: none; padding: 0; text-align: center; cursor: pointer"
-          :disabled="busy"
-          @click="onForgotPassword"
-        >
-          Forgot password?
-        </button>
       </form>
     </section>
   </section>
@@ -44,7 +24,7 @@
 <script setup lang="ts">
 import { z } from 'zod'
 
-import { EmailNotVerifiedError, useAuth } from '~/composables/useAuth'
+import { useAuth } from '~/composables/useAuth'
 import AppLogo from '@/components/icons/AppLogo.vue'
 
 const auth = useAuth()
@@ -52,9 +32,6 @@ const auth = useAuth()
 const email = ref('')
 const password = ref('')
 const error = ref('')
-const info = ref('')
-const needsVerification = ref(false)
-const busy = ref(false)
 
 const schema = z.object({
   email: z.string().email(),
@@ -106,8 +83,6 @@ const mapError = (err: unknown): string => {
 
 const onSubmit = async () => {
   error.value = ''
-  info.value = ''
-  needsVerification.value = false
 
   const parsed = schema.safeParse({ email: email.value, password: password.value })
   if (!parsed.success) {
@@ -119,47 +94,8 @@ const onSubmit = async () => {
     await auth.loginWithFirebase(email.value, password.value)
     await navigateTo('/admin/home')
   } catch (err) {
-    if (err instanceof EmailNotVerifiedError) {
-      needsVerification.value = true
-      error.value = 'Your email is not verified. Check your inbox or resend the verification email.'
-      return
-    }
     error.value = mapError(err)
   }
 }
 
-const onResendVerification = async () => {
-  error.value = ''
-  info.value = ''
-  busy.value = true
-  try {
-    await auth.resendVerificationEmail()
-    info.value = 'Verification email sent. Click the link, then sign in again.'
-  } catch (err) {
-    error.value = mapError(err)
-  } finally {
-    busy.value = false
-  }
-}
-
-const onForgotPassword = async () => {
-  error.value = ''
-  info.value = ''
-
-  const parsedEmail = z.string().email().safeParse(email.value)
-  if (!parsedEmail.success) {
-    error.value = 'Enter your email above first, then click “Forgot password?”.'
-    return
-  }
-
-  busy.value = true
-  try {
-    await auth.requestPasswordReset(email.value)
-    info.value = 'Password reset email sent. Check your inbox.'
-  } catch (err) {
-    error.value = mapError(err)
-  } finally {
-    busy.value = false
-  }
-}
 </script>

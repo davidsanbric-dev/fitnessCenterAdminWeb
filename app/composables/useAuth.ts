@@ -2,8 +2,6 @@ import { getApp, getApps, initializeApp } from 'firebase/app'
 import {
   getAuth,
   onAuthStateChanged,
-  sendEmailVerification,
-  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   type Auth,
@@ -40,19 +38,6 @@ interface FirebaseLoginResponse {
 const AUTH_TOKEN_KEY = 'fitness_admin_token'
 const AUTH_USER_KEY = 'fitness_admin_user'
 
-/**
- * Thrown when a user signs in with Firebase but has not verified their email.
- * The backend rejects unverified ID tokens with `403 Email not verified`, so we
- * block before calling `firebase-login` and let the UI offer a resend action.
- */
-export class EmailNotVerifiedError extends Error {
-  code = 'email-not-verified'
-
-  constructor() {
-    super('Email not verified')
-    this.name = 'EmailNotVerifiedError'
-  }
-}
 
 export const useAuth = () => {
   const token = useState<string | null>('auth-token', () => null)
@@ -192,14 +177,6 @@ export const useAuth = () => {
       const firebaseAuth = getFirebaseAuthClient()
       const credentials = await signInWithEmailAndPassword(firebaseAuth, email, password)
 
-      // Refresh the user record so `emailVerified` reflects a just-clicked link.
-      await credentials.user.reload()
-      if (!credentials.user.emailVerified) {
-        // Keep the Firebase session so the UI can resend the verification email,
-        // but do not establish an app session against an unverified account.
-        throw new EmailNotVerifiedError()
-      }
-
       // 1) ID token as-is for the exchange (no force-refresh needed yet).
       const idToken = await credentials.user.getIdToken()
 
@@ -221,20 +198,6 @@ export const useAuth = () => {
     } finally {
       loading.value = false
     }
-  }
-
-  /** Resend the verification email to the currently signed-in Firebase user. */
-  const resendVerificationEmail = async () => {
-    const currentUser = getFirebaseAuthClient().currentUser
-    if (!currentUser) {
-      throw new Error('No signed-in user to verify. Please sign in again.')
-    }
-    await sendEmailVerification(currentUser)
-  }
-
-  /** Trigger a Firebase password-reset email (forgot-password flow, spec §5.6). */
-  const requestPasswordReset = async (email: string) => {
-    await sendPasswordResetEmail(getFirebaseAuthClient(), email)
   }
 
   /** Sign out of Firebase and drop the app session, then route to login. */
@@ -299,8 +262,6 @@ export const useAuth = () => {
     clearAuth,
     getIdToken,
     loginWithFirebase,
-    resendVerificationEmail,
-    requestPasswordReset,
     handleSessionExpired,
     initAuthListener,
     logout,
