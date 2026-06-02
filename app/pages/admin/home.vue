@@ -43,11 +43,10 @@ const { locale } = useLocale()
 
 const t = (key: string) => resolveUiMessage(key, locale.value)
 
-const dashboard = ref<AdminHomeResponse | null>(null)
-
-await callOnce(async () => {
-  dashboard.value = await api.get<AdminHomeResponse>('/admin/home')
-})
+const { data: dashboard } = await useAsyncData<AdminHomeResponse>(
+  'admin-home-dashboard',
+  () => api.get<AdminHomeResponse>('/admin/home'),
+)
 
 const statusBreakdown = computed(() => dashboard.value?.status_breakdown || {})
 
