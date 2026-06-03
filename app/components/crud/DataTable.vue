@@ -11,7 +11,7 @@
         <tr v-if="rows.length === 0">
           <td :colspan="columns.length + (rowActions.length > 0 ? 1 : 0)" class="muted">{{ t('crud_no_records') }}</td>
         </tr>
-        <tr v-for="(row, rowIndex) in rows" :key="row.id || rowIndex">
+        <tr v-for="(row, rowIndex) in rows" :key="String(row.id ?? rowIndex)">
           <td v-for="column in columns" :key="column.key">
             {{ formatValue(resolvePath(row, column.key), column.type) }}
           </td>

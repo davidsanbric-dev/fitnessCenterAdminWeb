@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import RightSidebar from '~/components/layout/RightSidebar.vue'
+import RightSidebar from '~/components/layout/Sidebar.vue'
 import ToastViewport from '~/components/feedback/ToastViewport.vue'
 import { useSidebar } from '~/composables/useSidebar'
 import { Menu } from 'lucide-vue-next'

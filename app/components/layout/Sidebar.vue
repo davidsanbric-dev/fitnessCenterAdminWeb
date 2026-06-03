@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { resolveUiMessage } from '~/config/uiMessages'
-import { Home, Calendar, User, Dumbbell, CreditCard, Bell } from 'lucide-vue-next'
+import { Home, Calendar, User, Dumbbell, CreditCard, Bell, Newspaper } from 'lucide-vue-next'
 import AppLogo from '../icons/AppLogo.vue'
 import { useSidebar } from '~/composables/useSidebar'
 import { useAuth } from '~/composables/useAuth'
@@ -65,6 +65,7 @@ const navItems = [
   { label: 'nav_trainers', to: '/admin/trainers', icon: User },
   { label: 'nav_disciplines', to: '/admin/disciplines', icon: Dumbbell },
   { label: 'nav_memberships', to: '/admin/memberships', icon: CreditCard },
+  { label: 'nav_blog', to: '/admin/blog', icon: Newspaper },
   { label: 'nav_notifications', to: '/admin/notifications', icon: Bell },
 ]
 </script>
