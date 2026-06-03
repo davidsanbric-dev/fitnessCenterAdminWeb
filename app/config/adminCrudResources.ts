@@ -156,7 +156,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'trainer.full_name', label: 'Trainer', labelKey: 'col_trainer' },
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
       { key: 'location.name', label: 'Location', labelKey: 'col_location' },
-      { key: 'is_online', label: 'Online', type: 'boolean', labelKey: 'col_online' },
     ],
   },
   trainers: {
