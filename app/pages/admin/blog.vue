@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRuntimeConfig } from 'nuxt/app'
 
 import type { BlogFormValues } from '~/components/blog/BlogFormDialog.vue'
@@ -114,6 +114,12 @@ const formError = ref('')
 const selected = ref<BlogRow | null>(null)
 const deleteOpen = ref(false)
 const deleteTarget = ref<BlogRow | null>(null)
+
+// Load the first page on mount. Without this the list only populates after a
+// create/refresh, so a fresh page load (e.g. after re-login) showed nothing.
+onMounted(() => {
+  resource.fetchPage(1)
+})
 
 const imageSrc = (row: BlogRow) => (row.hero_image_url ? `${apiBaseUrl}${row.hero_image_url}` : '')
 
