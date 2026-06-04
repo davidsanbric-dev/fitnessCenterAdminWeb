@@ -35,7 +35,7 @@ export interface CrudResourceConfig {
       key: string
       label: string
       labelKey?: string
-      type: 'text' | 'textarea' | 'select' | 'number'
+      type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
       required?: boolean
       placeholder?: string
       placeholderKey?: string
@@ -64,7 +64,7 @@ export interface CrudResourceConfig {
       key: string
       label: string
       labelKey?: string
-      type: 'text' | 'textarea' | 'select' | 'number'
+      type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
       required?: boolean
       placeholder?: string
       placeholderKey?: string
@@ -413,10 +413,9 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       formFields: [
         {
           key: 'slot_datetime',
-          label: 'Date & time (YYYY-MM-DDTHH:MM)',
-          type: 'text',
+          label: 'Date & time',
+          type: 'datetime',
           required: true,
-          placeholder: '2026-06-10T09:00',
         },
         { key: 'schedule_type', label: 'Schedule type', type: 'text', defaultValue: 'PERSONAL' },
       ],
@@ -460,8 +459,8 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
         formFields: [
           {
             key: 'slot_datetime',
-            label: 'New date & time (YYYY-MM-DDTHH:MM)',
-            type: 'text',
+            label: 'New date & time',
+            type: 'datetime',
             required: true,
             fromRowPath: 'slot_datetime',
           },

@@ -31,6 +31,16 @@
           />
 
           <input
+            v-else-if="field.type === 'datetime'"
+            class="input"
+            type="datetime-local"
+            :min="nowDatetimeLocal"
+            :value="toDatetimeLocalValue(String(formValues[field.key] || ''))"
+            :disabled="loading"
+            @input="setValue(field.key, ($event.target as HTMLInputElement).value)"
+          >
+
+          <input
             v-else
             class="input"
             :type="field.type === 'number' ? 'number' : 'text'"
@@ -55,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 
 import { resolveUiMessage } from '~/config/uiMessages'
 
@@ -63,7 +73,7 @@ export interface ActionFormField {
   key: string
   label: string
   labelKey?: string
-  type: 'text' | 'textarea' | 'select' | 'number'
+  type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
   required?: boolean
   placeholder?: string
   placeholderKey?: string
@@ -103,6 +113,12 @@ watch(
 const setValue = (key: string, value: string) => {
   formValues[key] = value
 }
+
+// datetime-local requires "YYYY-MM-DDTHH:MM" — strip seconds/timezone if present
+const toDatetimeLocalValue = (v: string) => v.slice(0, 16)
+
+// Recomputed each time the dialog opens so "now" stays accurate
+const nowDatetimeLocal = computed(() => toDatetimeLocalValue(new Date().toISOString()))
 
 defineEmits<{
   cancel: []
