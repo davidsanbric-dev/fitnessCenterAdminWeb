@@ -395,4 +395,125 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'created_at', label: 'Created At', type: 'datetime', labelKey: 'col_created_at' },
     ],
   },
+  // Trainer-scoped: the signed-in trainer manages its own slots. Mutations here
+  // trigger a push notification to the company's members (handled server-side).
+  trainerSlots: {
+    title: 'My Slots',
+    description: 'Manage your availability. Changes notify members.',
+    endpoint: '/trainers/me/slots',
+    requiresAuth: true,
+    createAction: {
+      key: 'create_slot',
+      label: 'Add Slot',
+      method: 'POST',
+      pathTemplate: '/trainers/me/slots',
+      confirmMessage: 'Create this slot?',
+      successMessage: 'Slot created — members notified.',
+      errorMessage: 'Could not create slot.',
+      formFields: [
+        {
+          key: 'slot_datetime',
+          label: 'Date & time (YYYY-MM-DDTHH:MM)',
+          type: 'text',
+          required: true,
+          placeholder: '2026-06-10T09:00',
+        },
+        { key: 'schedule_type', label: 'Schedule type', type: 'text', defaultValue: 'PERSONAL' },
+      ],
+      payload: (_, values) => ({
+        slot_datetime: String(values.slot_datetime || '').trim(),
+        schedule_type: String(values.schedule_type || 'PERSONAL').trim() || 'PERSONAL',
+      }),
+    },
+    rowActions: [
+      {
+        key: 'toggle_availability',
+        label: 'Set Availability',
+        method: 'PATCH',
+        pathTemplate: '/trainers/me/slots/{slot_id}',
+        confirmMessage: 'Update availability?',
+        successMessage: 'Slot updated — members notified.',
+        errorMessage: 'Could not update slot.',
+        formFields: [
+          {
+            key: 'is_available',
+            label: 'Available',
+            type: 'select',
+            required: true,
+            defaultValue: 'true',
+            options: [
+              { label: 'Available', value: 'true' },
+              { label: 'Unavailable', value: 'false' },
+            ],
+          },
+        ],
+        payload: (_, values) => ({ is_available: String(values.is_available) === 'true' }),
+      },
+      {
+        key: 'reschedule_slot',
+        label: 'Reschedule',
+        method: 'PATCH',
+        pathTemplate: '/trainers/me/slots/{slot_id}',
+        confirmMessage: 'Reschedule this slot?',
+        successMessage: 'Slot rescheduled — members notified.',
+        errorMessage: 'Could not reschedule slot.',
+        formFields: [
+          {
+            key: 'slot_datetime',
+            label: 'New date & time (YYYY-MM-DDTHH:MM)',
+            type: 'text',
+            required: true,
+            fromRowPath: 'slot_datetime',
+          },
+        ],
+        payload: (_, values) => ({ slot_datetime: String(values.slot_datetime || '').trim() }),
+      },
+      {
+        key: 'delete_slot',
+        label: 'Delete',
+        method: 'DELETE',
+        pathTemplate: '/trainers/me/slots/{slot_id}',
+        confirmMessage: 'Delete this slot? Members will be notified.',
+        successMessage: 'Slot deleted — members notified.',
+        errorMessage: 'Could not delete slot.',
+        payload: () => ({}),
+      },
+    ],
+    columns: [
+      { key: 'slot_id', label: 'ID' },
+      { key: 'slot_datetime', label: 'Date & Time', type: 'datetime' },
+      { key: 'discipline_name', label: 'Discipline' },
+      { key: 'is_available', label: 'Available', type: 'boolean' },
+      { key: 'schedule_type', label: 'Type' },
+    ],
+  },
+  // Trainer-scoped read-only bookings for the signed-in trainer's own sessions.
+  trainerBookings: {
+    title: 'My Bookings',
+    description: 'Bookings for your sessions.',
+    endpoint: '/trainers/me/bookings',
+    requiresAuth: true,
+    filters: [
+      {
+        key: 'booking_status',
+        label: 'Status',
+        labelKey: 'filter_booking_status',
+        type: 'select',
+        options: [
+          { label: 'All', labelKey: 'filter_option_all', value: '' },
+          { label: 'Pending', labelKey: 'filter_option_pending', value: 'PENDING' },
+          { label: 'Confirmed', labelKey: 'filter_option_confirmed', value: 'CONFIRMED' },
+          { label: 'Cancelled', labelKey: 'filter_option_cancelled', value: 'CANCELLED' },
+          { label: 'Completed', labelKey: 'filter_option_completed', value: 'COMPLETED' },
+        ],
+      },
+    ],
+    columns: [
+      { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
+      { key: 'booking_status', label: 'Status', labelKey: 'col_booking_status' },
+      { key: 'booking_datetime', label: 'Datetime', type: 'datetime', labelKey: 'col_booking_datetime' },
+      { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
+      { key: 'location.name', label: 'Location', labelKey: 'col_location' },
+    ],
+  },
 }

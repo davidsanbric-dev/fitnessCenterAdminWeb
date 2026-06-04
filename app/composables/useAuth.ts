@@ -47,6 +47,10 @@ export const useAuth = () => {
 
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
   const isAdmin = computed(() => ['admin', 'manager'].includes(user.value?.role || ''))
+  const isTrainer = computed(() => user.value?.role === 'trainer')
+  // Both staff (admin/manager) and trainers sign into the web app; they differ
+  // only in which modules they are scoped to (see auth.global middleware).
+  const canAccessWeb = computed(() => isAdmin.value || isTrainer.value)
 
   const hydrateFromStorage = () => {
     if (typeof window === 'undefined' || ready.value) {
@@ -257,6 +261,8 @@ export const useAuth = () => {
     loading,
     isAuthenticated,
     isAdmin,
+    isTrainer,
+    canAccessWeb,
     hydrateFromStorage,
     isTokenExpired,
     clearAuth,

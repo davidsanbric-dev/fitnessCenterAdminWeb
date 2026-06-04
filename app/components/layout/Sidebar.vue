@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { resolveUiMessage } from '~/config/uiMessages'
-import { Home, Calendar, User, Dumbbell, CreditCard, Bell, Newspaper } from 'lucide-vue-next'
+import { Home, Calendar, User, Dumbbell, CreditCard, Bell, Newspaper, CalendarClock, IdCard } from 'lucide-vue-next'
 import AppLogo from '../icons/AppLogo.vue'
 import { useSidebar } from '~/composables/useSidebar'
 import { useAuth } from '~/composables/useAuth'
@@ -59,7 +59,7 @@ const auth = useAuth()
 const t = (key: string) => resolveUiMessage(key, locale.value)
 const themeLabel = computed(() => (theme.value === 'dark' ? t('theme_switch_light') : t('theme_switch_dark')))
 
-const navItems = [
+const adminNavItems = [
   { label: 'nav_home', to: '/admin/home', icon: Home },
   { label: 'nav_bookings', to: '/admin/bookings', icon: Calendar },
   { label: 'nav_trainers', to: '/admin/trainers', icon: User },
@@ -68,6 +68,18 @@ const navItems = [
   { label: 'nav_blog', to: '/admin/blog', icon: Newspaper },
   { label: 'nav_notifications', to: '/admin/notifications', icon: Bell },
 ]
+
+// A trainer is scoped to its own home, slots, bookings and profile modules.
+const trainerNavItems = [
+  { label: 'nav_home', to: '/admin/home', icon: Home },
+  { label: 'nav_slots', to: '/admin/slots', icon: CalendarClock },
+  { label: 'nav_bookings', to: '/admin/bookings', icon: Calendar },
+  { label: 'nav_trainer_profile', to: '/admin/trainer-profile', icon: IdCard },
+]
+
+const navItems = computed(() =>
+  auth.isTrainer.value && !auth.isAdmin.value ? trainerNavItems : adminNavItems,
+)
 </script>
 
 <style scoped>
