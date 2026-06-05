@@ -168,6 +168,39 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     // returns 401 without a Firebase ID token. The backend scopes results to the
     // authenticated user's company. See data_environment_isolation specs §3.1/§5.
     requiresAuth: true,
+    // Staff-only trainer provisioning. Posts credentials + personal data to the
+    // admin endpoint, which creates the Firebase account (email-verified), the
+    // user (trainer role) and the linked trainer record in the admin's company.
+    createAction: {
+      key: 'create_trainer',
+      label: 'Add Trainer',
+      method: 'POST',
+      pathTemplate: '/admin/trainers',
+      confirmMessage: 'Create this trainer account?',
+      successMessage: 'Trainer created — they can now sign in to the web app.',
+      errorMessage: 'Could not create trainer: {error_message}',
+      formFields: [
+        { key: 'full_name', label: 'Full name', type: 'text', required: true, placeholder: 'e.g. Jordan Pike' },
+        { key: 'email', label: 'Email', type: 'text', required: true, placeholder: 'trainer@company.com' },
+        { key: 'password', label: 'Temporary password', type: 'text', required: true, placeholder: 'min. 6 characters' },
+        { key: 'bio', label: 'Bio', type: 'textarea', placeholder: 'Short professional bio' },
+        {
+          key: 'certifications',
+          label: 'Certifications (comma separated)',
+          type: 'textarea',
+          placeholder: 'NASM-CPT, Strength & Conditioning',
+        },
+      ],
+      payload: (_, values) => ({
+        full_name: String(values.full_name || '').trim(),
+        email: String(values.email || '').trim().toLowerCase(),
+        password: String(values.password || ''),
+        bio: String(values.bio || '').trim() || null,
+        // Sent as a CSV string (the generic CRUD client only emits scalar fields);
+        // the backend splits it into a list. See TrainerAdminCreateRequest.
+        certifications: String(values.certifications || '').trim(),
+      }),
+    },
     filters: [
       {
         key: 'search',
