@@ -41,11 +41,25 @@
               <td><CrudDateTimeCell :value="row.created_at" mode="datetime" /></td>
               <td>
                 <div style="display: flex; gap: 0.35rem; flex-wrap: wrap">
-                  <button class="btn" type="button" :disabled="busy" @click="openEdit(row)">
-                    {{ t('blog_action_edit') }}
+                  <button
+                    class="btn btn-icon"
+                    type="button"
+                    :disabled="busy"
+                    :title="t('blog_action_edit')"
+                    :aria-label="t('blog_action_edit')"
+                    @click="openEdit(row)"
+                  >
+                    <Pencil :size="14" />
                   </button>
-                  <button class="btn" type="button" :disabled="busy" @click="askDelete(row)">
-                    {{ t('blog_action_delete') }}
+                  <button
+                    class="btn btn-icon btn-danger"
+                    type="button"
+                    :disabled="busy"
+                    :title="t('blog_action_delete')"
+                    :aria-label="t('blog_action_delete')"
+                    @click="askDelete(row)"
+                  >
+                    <Trash2 :size="14" />
                   </button>
                 </div>
               </td>
@@ -84,6 +98,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRuntimeConfig } from 'nuxt/app'
+import { Pencil, Trash2 } from 'lucide-vue-next'
 
 import type { BlogFormValues } from '~/components/blog/BlogFormDialog.vue'
 import { useApiClient } from '~/composables/useApiClient'
