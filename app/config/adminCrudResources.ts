@@ -2,7 +2,7 @@ export interface CrudColumn {
   key: string
   label: string
   labelKey?: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean'
+  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
 }
 
 export interface CrudResourceConfig {
@@ -151,7 +151,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     ],
     columns: [
       { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
-      { key: 'booking_status', label: 'Status', labelKey: 'col_booking_status' },
+      { key: 'booking_status', label: 'Status', type: 'status', labelKey: 'col_booking_status' },
       { key: 'booking_datetime', label: 'Datetime', type: 'datetime', labelKey: 'col_booking_datetime' },
       { key: 'trainer.full_name', label: 'Trainer', labelKey: 'col_trainer' },
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
@@ -542,7 +542,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     ],
     columns: [
       { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
-      { key: 'booking_status', label: 'Status', labelKey: 'col_booking_status' },
+      { key: 'booking_status', label: 'Status', type: 'status', labelKey: 'col_booking_status' },
       { key: 'booking_datetime', label: 'Datetime', type: 'datetime', labelKey: 'col_booking_datetime' },
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
       { key: 'location.name', label: 'Location', labelKey: 'col_location' },

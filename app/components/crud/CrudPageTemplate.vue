@@ -35,7 +35,7 @@ import { resolveUiMessage } from '~/config/uiMessages'
 interface CrudColumn {
   key: string
   label: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean'
+  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
 }
 
 defineProps<{

@@ -27,9 +27,10 @@
 
     <article v-else class="panel" style="padding: 0.9rem">
       <h3 style="margin-top: 0">{{ t('status_breakdown_title') }}</h3>
-      <ul>
-        <li v-for="(value, key) in statusBreakdown" :key="key" style="margin-bottom: 0.3rem">
-          <strong>{{ key }}</strong>: {{ value }}
+      <ul class="status-breakdown">
+        <li v-for="(value, key) in statusBreakdown" :key="key" class="status-breakdown__row">
+          <CrudStatusBadge :value="key" />
+          <span class="status-breakdown__count">{{ value }}</span>
         </li>
       </ul>
     </article>
@@ -115,3 +116,27 @@ const cards = computed(() => {
   ]
 })
 </script>
+
+<style scoped>
+.status-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-breakdown__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.status-breakdown__count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+</style>

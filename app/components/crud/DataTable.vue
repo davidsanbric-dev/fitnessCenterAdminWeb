@@ -18,6 +18,10 @@
               :value="resolvePath(row, column.key)"
               :mode="column.type"
             />
+            <CrudStatusBadge
+              v-else-if="column.type === 'status'"
+              :value="resolvePath(row, column.key)"
+            />
             <template v-else>{{ formatValue(resolvePath(row, column.key), column.type) }}</template>
           </td>
           <td v-if="rowActions.length > 0">
@@ -60,7 +64,7 @@ interface CrudColumn {
   key: string
   label: string
   labelKey?: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean'
+  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
 }
 
 const props = defineProps<{
