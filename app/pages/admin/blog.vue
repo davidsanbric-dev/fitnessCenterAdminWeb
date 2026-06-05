@@ -38,7 +38,7 @@
                 <span v-else class="muted">—</span>
               </td>
               <td>{{ row.title }}</td>
-              <td>{{ formatDate(row.created_at) }}</td>
+              <td><CrudDateTimeCell :value="row.created_at" mode="datetime" /></td>
               <td>
                 <div style="display: flex; gap: 0.35rem; flex-wrap: wrap">
                   <button class="btn" type="button" :disabled="busy" @click="openEdit(row)">
@@ -122,11 +122,6 @@ onMounted(() => {
 })
 
 const imageSrc = (row: BlogRow) => (row.hero_image_url ? `${apiBaseUrl}${row.hero_image_url}` : '')
-
-const formatDate = (value: string) => {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
-}
 
 const openCreate = () => {
   selected.value = null

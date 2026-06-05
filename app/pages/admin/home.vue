@@ -16,8 +16,8 @@
     <article v-if="isTrainerHome" class="panel" style="padding: 0.9rem">
       <h3 style="margin-top: 0">{{ t('trainer_upcoming_slots_title') }}</h3>
       <ul v-if="upcomingSlots.length">
-        <li v-for="slot in upcomingSlots" :key="slot.slot_id" style="margin-bottom: 0.3rem">
-          <strong>{{ formatDateTime(slot.slot_datetime) }}</strong>
+        <li v-for="slot in upcomingSlots" :key="slot.slot_id" style="margin-bottom: 0.4rem">
+          <CrudDateTimeCell :value="slot.slot_datetime" mode="datetime" />
           — {{ slot.discipline_name || '—' }}
           ({{ slot.is_available ? t('kpi_available_slots') : t('kpi_booked_slots') }})
         </li>
@@ -90,11 +90,6 @@ const { data: trainerDashboard } = await useAsyncData<TrainerDashboardResponse |
 
 const statusBreakdown = computed(() => adminDashboard.value?.status_breakdown || {})
 const upcomingSlots = computed(() => trainerDashboard.value?.upcoming_slots || [])
-
-const formatDateTime = (value: string) => {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
-}
 
 const cards = computed(() => {
   if (isTrainerHome.value) {

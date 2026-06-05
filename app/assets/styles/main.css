@@ -152,6 +152,33 @@ select {
   border-color: var(--primary-soft);
 }
 
+.btn-icon {
+  padding: 0.35rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon.btn-danger {
+  color: var(--danger);
+  border-color: rgba(201, 64, 64, 0.3);
+}
+
+.btn-icon.btn-danger:hover:not(:disabled) {
+  background: rgba(201, 64, 64, 0.1);
+  border-color: rgba(201, 64, 64, 0.55);
+}
+
+.btn-icon.btn-success {
+  color: var(--success);
+  border-color: rgba(84, 173, 87, 0.3);
+}
+
+.btn-icon.btn-success:hover:not(:disabled) {
+  background: rgba(84, 173, 87, 0.1);
+  border-color: rgba(84, 173, 87, 0.55);
+}
+
 .grid-kpi {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
