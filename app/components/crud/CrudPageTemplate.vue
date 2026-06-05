@@ -7,9 +7,6 @@
       </div>
       <div style="display: flex; gap: 0.55rem">
         <slot name="actions" />
-        <button class="btn" :disabled="loading" @click="$emit('refresh')">
-          {{ loading ? t('crud_loading') : t('crud_refresh') }}
-        </button>
       </div>
     </header>
 
@@ -53,7 +50,6 @@ defineProps<{
 }>()
 
 defineEmits<{
-  refresh: []
   'change-page': [page: number]
 }>()
 

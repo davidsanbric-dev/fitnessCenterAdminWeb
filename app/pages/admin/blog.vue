@@ -8,7 +8,6 @@
     :page="resource.page.value"
     :page-size="resource.pageSize.value"
     :total="resource.total.value"
-    @refresh="resource.fetchPage(resource.page.value)"
     @change-page="resource.fetchPage"
   >
     <template #actions>

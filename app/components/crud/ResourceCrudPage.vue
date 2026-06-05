@@ -8,7 +8,6 @@
     :page="resource.page.value"
     :page-size="resource.pageSize.value"
     :total="resource.total.value"
-    @refresh="resource.fetchPage(resource.page.value)"
     @change-page="resource.fetchPage"
   >
     <template #actions>
@@ -511,9 +510,11 @@ const executeAction = async () => {
       requiresAuth: props.config.requiresAuth ?? true,
     })
 
-    if (!usedOptimisticUpdate) {
-      await resource.fetchPage(resource.page.value)
-    }
+    // Always reconcile with the server after a successful mutation so the table
+    // stays current on its own — this replaces the manual "Refresh" button. The
+    // optimistic update above keeps the row change visible while the refetch is
+    // in flight, then the fresh page reflects authoritative server state.
+    await resource.fetchPage(resource.page.value)
 
     toasts.pushSuccess(resolveSuccessMessage(action, actionState.selectedRow, actionState.formValues))
     closeActionDialog()
