@@ -544,7 +544,9 @@ const executeAction = async () => {
 const submitActionForm = async (values: Record<string, string | number>) => {
   actionState.formValues = values
 
-  const requiredFields = selectedActionFormFields.value.filter((field) => field.required)
+  const requiredFields = selectedActionFormFields.value.filter(
+    (field) => field.required || (typeof field.requiredWhen === 'function' && field.requiredWhen(values)),
+  )
   const hasMissing = requiredFields.some((field) => {
     const value = values[field.key]
     return value === '' || value === undefined || value === null

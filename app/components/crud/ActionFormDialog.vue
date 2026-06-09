@@ -75,6 +75,10 @@ export interface ActionFormField {
   labelKey?: string
   type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
   required?: boolean
+  // Conditional requirement evaluated against the live form values, e.g. notes
+  // become mandatory only when booking_status is COMPLETED. Treated like
+  // `required` at submit-time when the predicate returns true.
+  requiredWhen?: (values: Record<string, string | number>) => boolean
   placeholder?: string
   placeholderKey?: string
   options?: Array<{ label: string; value: string; labelKey?: string }>

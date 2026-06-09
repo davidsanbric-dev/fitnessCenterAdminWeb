@@ -44,6 +44,7 @@ export interface CrudResourceConfig {
       labelKey?: string
       type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
       required?: boolean
+      requiredWhen?: (values: Record<string, string | number>) => boolean
       placeholder?: string
       placeholderKey?: string
       options?: Array<{ label: string; value: string; labelKey?: string }>
@@ -73,6 +74,7 @@ export interface CrudResourceConfig {
       labelKey?: string
       type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
       required?: boolean
+      requiredWhen?: (values: Record<string, string | number>) => boolean
       placeholder?: string
       placeholderKey?: string
       options?: Array<{ label: string; value: string; labelKey?: string }>
@@ -145,7 +147,9 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
             labelKey: 'field_notes',
             type: 'textarea',
             placeholderKey: 'field_notes_placeholder',
-            defaultValue: 'Updated by admin panel',
+            // Mandatory when completing a session: the note is the member's
+            // post-session feedback, surfaced in their mobile Training History.
+            requiredWhen: (values) => String(values.booking_status || '') === 'COMPLETED',
           },
         ],
         payload: (row, values) => ({
@@ -550,6 +554,50 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           { label: 'Cancelled', labelKey: 'filter_option_cancelled', value: 'CANCELLED' },
           { label: 'Completed', labelKey: 'filter_option_completed', value: 'COMPLETED' },
         ],
+      },
+    ],
+    rowActions: [
+      {
+        key: 'update_status',
+        label: 'Update Status',
+        labelKey: 'action_update_status',
+        method: 'PATCH',
+        pathTemplate: '/trainers/me/bookings/{booking_id}/status',
+        confirmMessageKey: 'action_confirm_update_status',
+        successMessageKey: 'booking_update_status_success',
+        errorMessageKey: 'booking_update_status_error',
+        formFields: [
+          {
+            key: 'booking_status',
+            label: 'Booking Status',
+            labelKey: 'field_booking_status',
+            type: 'select',
+            required: true,
+            defaultValue: 'COMPLETED',
+            options: [
+              { label: 'Confirmed', labelKey: 'field_booking_status_option_confirmed', value: 'CONFIRMED' },
+              { label: 'Cancelled', labelKey: 'field_booking_status_option_cancelled', value: 'CANCELLED' },
+              { label: 'Completed', labelKey: 'field_booking_status_option_completed', value: 'COMPLETED' },
+            ],
+          },
+          {
+            key: 'notes',
+            label: 'Notes',
+            labelKey: 'field_notes',
+            type: 'textarea',
+            placeholderKey: 'field_session_feedback_placeholder',
+            // Session feedback the member reads in their Training History;
+            // required when completing the session.
+            requiredWhen: (values) => String(values.booking_status || '') === 'COMPLETED',
+          },
+        ],
+        payload: (row, values) => ({
+          booking_status: String(values.booking_status || 'COMPLETED'),
+          location_code: String(
+            (row.location as Record<string, unknown> | undefined)?.location_code || '',
+          ),
+          notes: String(values.notes || ''),
+        }),
       },
     ],
     columns: [
