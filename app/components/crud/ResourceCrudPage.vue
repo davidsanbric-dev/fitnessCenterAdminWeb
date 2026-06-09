@@ -104,6 +104,7 @@ import { isTextFilter } from '~/config/adminCrudResources'
 import { resolveToastMessage } from '~/config/toastMessages'
 import { resolveUiMessage } from '~/config/uiMessages'
 import { useApiClient } from '~/composables/useApiClient'
+import { useNotificationsFeed } from '~/composables/useNotificationsFeed'
 
 const props = defineProps<{
   config: CrudResourceConfig
@@ -575,7 +576,23 @@ watch(
 // state) and while the tab is hidden (to avoid needless requests).
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
+onMounted(async () => {
+  // Inbox-style "mark all read on open": flag the unread items read on the
+  // server, then reconcile the list rows and the global unread badge so the
+  // page and sidebar reflect the cleared state immediately.
+  if (props.config.markReadOnVisitPath) {
+    try {
+      await api.request(props.config.markReadOnVisitPath, {
+        method: 'PUT',
+        requiresAuth: props.config.requiresAuth ?? true,
+      })
+      await resource.fetchPage(resource.page.value, true)
+      await useNotificationsFeed().poll()
+    } catch {
+      // Best-effort; the next auto-refresh / poll reconciles if this failed.
+    }
+  }
+
   const interval = props.config.refreshIntervalMs
   if (!interval || interval <= 0) {
     return

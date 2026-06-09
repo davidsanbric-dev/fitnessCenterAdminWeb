@@ -16,6 +16,9 @@ export interface CrudResourceConfig {
   // interval (ms) so member-driven changes (new/cancelled bookings) surface
   // without a manual reload. Omitted on largely-static catalogue resources.
   refreshIntervalMs?: number
+  // When set, visiting the page issues a PUT to this path once (inbox-style
+  // "mark all read on open"), then refreshes the list and the unread badge.
+  markReadOnVisitPath?: string
   filters?: Array<{
     key: string
     label: string
@@ -401,6 +404,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     endpoint: '/notifications',
     requiresAuth: true,
     refreshIntervalMs: 20000,
+    markReadOnVisitPath: '/notifications/read-all',
     filters: [
       {
         key: 'is_read',
