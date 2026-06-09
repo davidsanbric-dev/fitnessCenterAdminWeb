@@ -12,6 +12,10 @@ export interface CrudResourceConfig {
   descriptionKey?: string
   endpoint: string
   requiresAuth?: boolean
+  // When set, the list view silently re-fetches the current page on this
+  // interval (ms) so member-driven changes (new/cancelled bookings) surface
+  // without a manual reload. Omitted on largely-static catalogue resources.
+  refreshIntervalMs?: number
   filters?: Array<{
     key: string
     label: string
@@ -92,6 +96,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     descriptionKey: 'resource_bookings_description',
     endpoint: '/admin/bookings',
     requiresAuth: true,
+    refreshIntervalMs: 20000,
     filters: [
       {
         key: 'booking_status',
@@ -394,6 +399,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     descriptionKey: 'resource_notifications_description',
     endpoint: '/notifications',
     requiresAuth: true,
+    refreshIntervalMs: 20000,
     filters: [
       {
         key: 'is_read',
@@ -525,6 +531,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
     description: 'Bookings for your sessions.',
     endpoint: '/trainers/me/bookings',
     requiresAuth: true,
+    refreshIntervalMs: 20000,
     filters: [
       {
         key: 'booking_status',

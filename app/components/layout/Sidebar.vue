@@ -16,6 +16,11 @@
       >
         <component :is="item.icon" class="nav-icon" />
         {{ t(item.label) }}
+        <span
+          v-if="item.to === '/admin/notifications' && unreadCount > 0"
+          class="nav-badge"
+          aria-label="Unread notifications"
+        >{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
       </NuxtLink>
     </nav>
 
@@ -49,12 +54,14 @@ import { Home, Calendar, User, Dumbbell, CreditCard, Bell, Newspaper, CalendarCl
 import AppLogo from '../icons/AppLogo.vue'
 import { useSidebar } from '~/composables/useSidebar'
 import { useAuth } from '~/composables/useAuth'
+import { useNotificationsFeed } from '~/composables/useNotificationsFeed'
 
 const route = useRoute()
 const { locale, setLocale } = useLocale()
 const { theme, toggleTheme } = useTheme()
 const { isOpen, closeSidebar } = useSidebar()
 const auth = useAuth()
+const { unreadCount } = useNotificationsFeed()
 
 const t = (key: string) => resolveUiMessage(key, locale.value)
 const themeLabel = computed(() => (theme.value === 'dark' ? t('theme_switch_light') : t('theme_switch_dark')))
@@ -89,6 +96,20 @@ const navItems = computed(() =>
   margin-right: 0.5rem;
   flex-shrink: 0;
   display: inline-block;
+}
+
+.nav-badge {
+  margin-left: auto;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 0.625rem;
+  background-color: var(--primary, #2c6ba4);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  text-align: center;
 }
 
 .nav-link {

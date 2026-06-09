@@ -88,6 +88,8 @@
 <script setup lang="ts">
 import {
   computed,
+  onBeforeUnmount,
+  onMounted,
   reactive,
   watch,
 } from 'vue'
@@ -565,6 +567,37 @@ watch(
     immediate: true,
   },
 )
+
+// Background auto-refresh: for resources that opt in (config.refreshIntervalMs),
+// silently re-fetch the current page on an interval so member-driven changes
+// (new or cancelled bookings, incoming notifications) appear without a manual
+// reload. Paused while a dialog/action is in flight (to preserve optimistic
+// state) and while the tab is hidden (to avoid needless requests).
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  const interval = props.config.refreshIntervalMs
+  if (!interval || interval <= 0) {
+    return
+  }
+
+  pollTimer = setInterval(() => {
+    if (actionState.loading || actionState.confirmOpen || actionState.formOpen) {
+      return
+    }
+    if (typeof document !== 'undefined' && document.hidden) {
+      return
+    }
+    void resource.fetchPage(resource.page.value, true)
+  }, interval)
+})
+
+onBeforeUnmount(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+})
 
 watch(
   () => locale.value,

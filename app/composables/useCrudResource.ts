@@ -36,8 +36,12 @@ export const useCrudResource = (
     query.value[key] = value
   }
 
-  const fetchPage = async (targetPage = page.value) => {
-    loading.value = true
+  const fetchPage = async (targetPage = page.value, silent = false) => {
+    // `silent` skips the loading flag so background polling refreshes the table
+    // in place without flashing the spinner or empty state.
+    if (!silent) {
+      loading.value = true
+    }
 
     try {
       const response = await api.get<CrudResult>(
@@ -66,7 +70,9 @@ export const useCrudResource = (
         page.value = 1
       }
     } finally {
-      loading.value = false
+      if (!silent) {
+        loading.value = false
+      }
     }
   }
 
