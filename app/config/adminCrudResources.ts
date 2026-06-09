@@ -5,6 +5,33 @@ export interface CrudColumn {
   type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
 }
 
+/** A single field surfaced inside a mobile "view details" dialog. */
+export interface MobileDetailField {
+  key: string
+  label: string
+  labelKey?: string
+  type?: CrudColumn['type']
+}
+
+/** A more-actions menu entry that opens a read-only details dialog. */
+export interface MobileDetailView {
+  key: string
+  label: string
+  labelKey?: string
+  fields: MobileDetailField[]
+}
+
+/**
+ * Drives the responsive mobile card layout: which compound row cell renders the
+ * primary content, plus any secondary fields collapsed behind the "..." menu's
+ * read-only detail dialogs. Row actions defined on the resource are appended to
+ * the same menu automatically.
+ */
+export interface MobileCellConfig {
+  variant: 'booking' | 'trainer' | 'discipline' | 'plan' | 'slot'
+  detailViews?: MobileDetailView[]
+}
+
 export interface CrudResourceConfig {
   title: string
   titleKey?: string
@@ -87,6 +114,9 @@ export interface CrudResourceConfig {
     ) => Record<string, unknown>
   }>
   columns: CrudColumn[]
+  // Optional responsive layout: when set, narrow viewports render compound row
+  // cells + a more-actions menu instead of the horizontally-scrolling table.
+  mobile?: MobileCellConfig
 }
 
 /** Unambiguous type guard for filter type narrowing when labelKey and type share the same string literals. */
@@ -170,6 +200,21 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
       { key: 'location.name', label: 'Location', labelKey: 'col_location' },
     ],
+    mobile: {
+      variant: 'booking',
+      detailViews: [
+        {
+          key: 'details',
+          label: 'View Details',
+          labelKey: 'mobile_view_details',
+          fields: [
+            { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
+            { key: 'location.name', label: 'Location', labelKey: 'col_location' },
+            { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
+          ],
+        },
+      ],
+    },
   },
   trainers: {
     title: 'Trainers',
@@ -228,6 +273,20 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'discipline_name', label: 'Discipline', labelKey: 'col_discipline' },
       { key: 'bio', label: 'Bio', labelKey: 'col_bio' },
     ],
+    mobile: {
+      variant: 'trainer',
+      detailViews: [
+        {
+          key: 'bio',
+          label: 'View Bio',
+          labelKey: 'mobile_view_bio',
+          fields: [
+            { key: 'bio', label: 'Bio', labelKey: 'col_bio' },
+            { key: 'trainer_id', label: 'ID', labelKey: 'col_id' },
+          ],
+        },
+      ],
+    },
   },
   disciplines: {
     title: 'Disciplines',
@@ -254,6 +313,9 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'description', label: 'Description', labelKey: 'col_description' },
       { key: 'trainers_count', label: 'Trainers', labelKey: 'col_trainers_count' },
     ],
+    // The name-description-trainers compound cell surfaces every field, so the
+    // mobile card needs no more-actions menu (the resource has no row actions).
+    mobile: { variant: 'discipline' },
   },
   memberships: {
     title: 'Membership Plans',
@@ -373,6 +435,21 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'duration_days', label: 'Duration (days)', labelKey: 'col_duration_days' },
       { key: 'max_bookings_per_month', label: 'Max Bookings', labelKey: 'col_max_bookings' },
     ],
+    mobile: {
+      variant: 'plan',
+      detailViews: [
+        {
+          key: 'details',
+          label: 'View Details',
+          labelKey: 'mobile_view_details',
+          fields: [
+            { key: 'description', label: 'Description', labelKey: 'col_description' },
+            { key: 'features', label: 'Features', labelKey: 'col_features' },
+            { key: 'membership_plan_id', label: 'ID', labelKey: 'col_id' },
+          ],
+        },
+      ],
+    },
   },
   notifications: {
     title: 'Notifications',
@@ -507,6 +584,9 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'is_available', label: 'Available', type: 'boolean' },
       { key: 'schedule_type', label: 'Type' },
     ],
+    // Trainer-role mobile layout: slot digest cell + the availability/reschedule/
+    // delete actions collapsed under the more-actions menu.
+    mobile: { variant: 'slot' },
   },
   // Trainer-scoped read-only bookings for the signed-in trainer's own sessions.
   trainerBookings: {
@@ -582,5 +662,22 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
       { key: 'location.name', label: 'Location', labelKey: 'col_location' },
     ],
+    // Mirrors the admin bookings card. The booking compound cell omits the
+    // trainer line here (these are the signed-in trainer's own sessions).
+    mobile: {
+      variant: 'booking',
+      detailViews: [
+        {
+          key: 'details',
+          label: 'View Details',
+          labelKey: 'mobile_view_details',
+          fields: [
+            { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
+            { key: 'location.name', label: 'Location', labelKey: 'col_location' },
+            { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
+          ],
+        },
+      ],
+    },
   },
 }

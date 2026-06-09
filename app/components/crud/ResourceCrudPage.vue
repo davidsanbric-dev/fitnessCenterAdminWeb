@@ -56,6 +56,7 @@
         :rows="resource.rows.value"
         :row-actions="tableRowActions"
         :actions-disabled="actionState.loading"
+        :mobile="config.mobile"
         @row-action="onRowAction"
       />
     </template>

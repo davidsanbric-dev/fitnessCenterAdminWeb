@@ -340,6 +340,179 @@ select {
   border-left-color: var(--primary);
 }
 
+/* ── Compound row cells & mobile card layout ─────────────────── */
+.crud-cards {
+  display: none;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.crud-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.crud-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Shared compound-cell primitives, reused by every named cell component. */
+.cc {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.cc__stack {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.cc__field {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.cc__label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.cc__value {
+  font-size: 0.92rem;
+  color: var(--text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cc__value--muted {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.cc__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.cc__thumb {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.cc__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+/* "..." more-actions dropdown */
+.more-menu {
+  position: relative;
+  flex: none;
+}
+
+.more-menu__panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  min-width: 172px;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.45);
+}
+
+.more-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.more-menu__item:hover {
+  background: var(--nav-hover);
+}
+
+.more-menu__item--danger {
+  color: var(--danger);
+}
+
+/* Read-only "view details" dialog rows */
+.details-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.4rem 0 0.9rem;
+}
+
+.details-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.details-row__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.details-row__value {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* Below this width the table is swapped for the compound-cell card list. */
+@media (max-width: 640px) {
+  .crud-table-block.has-mobile-cards .crud-desktop {
+    display: none;
+  }
+
+  .crud-table-block.has-mobile-cards .crud-cards {
+    display: grid;
+  }
+}
+
 @media (max-width: 1060px) {
   .app-shell {
     grid-template-columns: 1fr;

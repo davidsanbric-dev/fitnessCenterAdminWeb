@@ -17,54 +17,77 @@
     </template>
 
     <template #table>
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 96px">{{ t('blog_col_image') }}</th>
-              <th>{{ t('blog_col_title') }}</th>
-              <th>{{ t('blog_col_created') }}</th>
-              <th>{{ t('crud_actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="resource.rows.value.length === 0">
-              <td colspan="4" class="muted">{{ t('blog_empty') }}</td>
-            </tr>
-            <tr v-for="row in (resource.rows.value as BlogRow[])" :key="row.id">
-              <td>
-                <img v-if="imageSrc(row)" :src="imageSrc(row)" alt="" class="thumb">
-                <span v-else class="muted">—</span>
-              </td>
-              <td>{{ row.title }}</td>
-              <td><CrudDateTimeCell :value="row.created_at" mode="datetime" /></td>
-              <td>
-                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap">
-                  <button
-                    class="btn btn-icon"
-                    type="button"
-                    :disabled="busy"
-                    :title="t('blog_action_edit')"
-                    :aria-label="t('blog_action_edit')"
-                    @click="openEdit(row)"
-                  >
-                    <Pencil :size="14" />
-                  </button>
-                  <button
-                    class="btn btn-icon btn-danger"
-                    type="button"
-                    :disabled="busy"
-                    :title="t('blog_action_delete')"
-                    :aria-label="t('blog_action_delete')"
-                    @click="askDelete(row)"
-                  >
-                    <Trash2 :size="14" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="crud-table-block has-mobile-cards">
+        <!-- Desktop / wide layout: datetime-title-image columns. -->
+        <div class="table-wrap crud-desktop">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 96px">{{ t('blog_col_image') }}</th>
+                <th>{{ t('blog_col_title') }}</th>
+                <th>{{ t('blog_col_created') }}</th>
+                <th>{{ t('crud_actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="resource.rows.value.length === 0">
+                <td colspan="4" class="muted">{{ t('blog_empty') }}</td>
+              </tr>
+              <tr v-for="row in (resource.rows.value as BlogRow[])" :key="row.id">
+                <td>
+                  <img v-if="imageSrc(row)" :src="imageSrc(row)" alt="" class="thumb">
+                  <span v-else class="muted">—</span>
+                </td>
+                <td>{{ row.title }}</td>
+                <td><CrudDateTimeCell :value="row.created_at" mode="datetime" /></td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem; flex-wrap: wrap">
+                    <button
+                      class="btn btn-icon"
+                      type="button"
+                      :disabled="busy"
+                      :title="t('blog_action_edit')"
+                      :aria-label="t('blog_action_edit')"
+                      @click="openEdit(row)"
+                    >
+                      <Pencil :size="14" />
+                    </button>
+                    <button
+                      class="btn btn-icon btn-danger"
+                      type="button"
+                      :disabled="busy"
+                      :title="t('blog_action_delete')"
+                      :aria-label="t('blog_action_delete')"
+                      @click="askDelete(row)"
+                    >
+                      <Trash2 :size="14" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile layout: datetime-title-image compound cell + more-actions. -->
+        <ul class="crud-cards">
+          <li v-if="resource.rows.value.length === 0" class="crud-card muted">{{ t('blog_empty') }}</li>
+          <li v-for="row in (resource.rows.value as BlogRow[])" :key="row.id" class="crud-card">
+            <div class="crud-card__body">
+              <CrudCellsBlogDigestCell
+                :title="row.title"
+                :created-at="row.created_at"
+                :image-url="imageSrc(row)"
+              />
+            </div>
+            <CrudMoreActionsMenu
+              :items="blogMenuItems"
+              :label="t('mobile_more_actions')"
+              :disabled="busy"
+              @select="(key) => onBlogMenuSelect(key, row)"
+            />
+          </li>
+        </ul>
       </div>
     </template>
   </CrudPageTemplate>
@@ -95,11 +118,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRuntimeConfig } from 'nuxt/app'
 import { Pencil, Trash2 } from 'lucide-vue-next'
 
 import type { BlogFormValues } from '~/components/blog/BlogFormDialog.vue'
+import type { MoreActionItem } from '~/components/crud/MoreActionsMenu.vue'
 import { useApiClient } from '~/composables/useApiClient'
 import { useCrudResource } from '~/composables/useCrudResource'
 import { resolveUiMessage } from '~/config/uiMessages'
@@ -136,6 +160,20 @@ onMounted(() => {
 })
 
 const imageSrc = (row: BlogRow) => (row.hero_image_url ? `${apiBaseUrl}${row.hero_image_url}` : '')
+
+// Mobile more-actions menu mirrors the desktop edit/delete icon buttons.
+const blogMenuItems = computed<MoreActionItem[]>(() => [
+  { key: 'edit', label: t('blog_action_edit'), icon: Pencil },
+  { key: 'delete', label: t('blog_action_delete'), icon: Trash2, danger: true },
+])
+
+const onBlogMenuSelect = (key: string, row: BlogRow) => {
+  if (key === 'edit') {
+    openEdit(row)
+  } else if (key === 'delete') {
+    askDelete(row)
+  }
+}
 
 const openCreate = () => {
   selected.value = null
