@@ -127,9 +127,6 @@ const uiMessages: Record<AppLocale, Record<string, string>> = {
     field_price: 'Price',
     field_duration_days: 'Duration Days',
     field_max_bookings_per_month: 'Max Bookings/Month',
-    field_includes_personal_training: 'Includes Personal Training',
-    field_option_no: 'No',
-    field_option_yes: 'Yes',
     field_features_csv: 'Features (comma separated)',
     field_features_csv_placeholder: 'Unlimited classes, Sauna access',
     // ── ActionState defaults ───────────────────────────────────
@@ -293,9 +290,6 @@ const uiMessages: Record<AppLocale, Record<string, string>> = {
     field_price: 'Precio',
     field_duration_days: 'Duración (días)',
     field_max_bookings_per_month: 'Máx. Reservas/Mes',
-    field_includes_personal_training: 'Incluye Entrenamiento Personal',
-    field_option_no: 'No',
-    field_option_yes: 'Sí',
     field_features_csv: 'Características (separadas por coma)',
     field_features_csv_placeholder: 'Clases ilimitadas, Acceso a sauna',
     // ── Valores predeterminados de ActionState ─────────────────

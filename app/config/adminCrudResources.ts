@@ -285,18 +285,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           defaultValue: 20,
         },
         {
-          key: 'includes_personal_training',
-          label: 'Includes Personal Training',
-          labelKey: 'field_includes_personal_training',
-          type: 'select',
-          required: true,
-          defaultValue: 'false',
-          options: [
-            { label: 'No', labelKey: 'field_option_no', value: 'false' },
-            { label: 'Yes', labelKey: 'field_option_yes', value: 'true' },
-          ],
-        },
-        {
           key: 'features_csv',
           label: 'Features (comma separated)',
           labelKey: 'field_features_csv',
@@ -310,7 +298,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
         price: Number(values.price || 0),
         duration_days: Number(values.duration_days || 30),
         max_bookings_per_month: Number(values.max_bookings_per_month || 0),
-        includes_personal_training: String(values.includes_personal_training || 'false') === 'true',
         features: String(values.features_csv || '')
           .split(',')
           .map((item) => item.trim())
@@ -348,18 +335,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
             fromRowPath: 'max_bookings_per_month',
           },
           {
-            key: 'includes_personal_training',
-            label: 'Includes Personal Training',
-            labelKey: 'field_includes_personal_training',
-            type: 'select',
-            required: true,
-            options: [
-              { label: 'No', labelKey: 'field_option_no', value: 'false' },
-              { label: 'Yes', labelKey: 'field_option_yes', value: 'true' },
-            ],
-            fromRowPath: 'includes_personal_training',
-          },
-          {
             key: 'features_csv',
             label: 'Features (comma separated)',
             labelKey: 'field_features_csv',
@@ -373,7 +348,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           price: Number(values.price || row.price || 0),
           duration_days: Number(values.duration_days || row.duration_days || 30),
           max_bookings_per_month: Number(values.max_bookings_per_month || row.max_bookings_per_month || 0),
-          includes_personal_training: String(values.includes_personal_training || row.includes_personal_training || 'false') === 'true',
           features: String(values.features_csv || '')
             .split(',')
             .map((item) => item.trim())
