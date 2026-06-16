@@ -378,26 +378,21 @@ select {
   justify-items: start;
 }
 
-/* Splits a multi-section card body (e.g. bookings: datetime-status above
-   member-trainer) into separated cells with a divider between them. */
+/* Lays out a booking row as two independent compound cells side by side
+   (datetime-status | member-trainer) within the same card, divided by a rule. */
 .cc--split {
-  gap: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  align-items: start;
 }
 
 .cc--split > .cc__cell {
-  padding: 0.5rem 0;
-}
-
-.cc--split > .cc__cell:first-child {
-  padding-top: 0;
-}
-
-.cc--split > .cc__cell:last-child {
-  padding-bottom: 0;
+  min-width: 0;
 }
 
 .cc--split > .cc__cell + .cc__cell {
-  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  padding-left: 0.75rem;
 }
 
 .cc__field {
