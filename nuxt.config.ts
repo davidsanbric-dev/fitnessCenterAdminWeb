@@ -3,6 +3,17 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   css: ['~/assets/styles/main.css'],
+  app: {
+    head: {
+      title: 'Fitness Admin',
+      // Browser-tab branding: the fitness app logo replaces the default favicon.
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+      ],
+    },
+  },
   routeRules: {
     '/': { redirect: '/login' },
   },

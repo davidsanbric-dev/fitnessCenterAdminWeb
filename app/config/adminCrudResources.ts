@@ -192,7 +192,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
-      { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
       { key: 'booking_status', label: 'Status', type: 'status', labelKey: 'col_booking_status' },
       { key: 'booking_datetime', label: 'Datetime', type: 'datetime', labelKey: 'col_booking_datetime' },
       { key: 'member.full_name', label: 'Member', labelKey: 'col_member' },
@@ -210,7 +209,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           fields: [
             { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
             { key: 'location.name', label: 'Location', labelKey: 'col_location' },
-            { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
           ],
         },
       ],
@@ -268,7 +266,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
-      { key: 'trainer_id', label: 'ID', labelKey: 'col_id' },
       { key: 'full_name', label: 'Name', labelKey: 'col_name' },
       { key: 'discipline_name', label: 'Discipline', labelKey: 'col_discipline' },
       { key: 'bio', label: 'Bio', labelKey: 'col_bio' },
@@ -282,7 +279,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           labelKey: 'mobile_view_bio',
           fields: [
             { key: 'bio', label: 'Bio', labelKey: 'col_bio' },
-            { key: 'trainer_id', label: 'ID', labelKey: 'col_id' },
           ],
         },
       ],
@@ -307,7 +303,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
-      { key: 'discipline_id', label: 'ID', labelKey: 'col_id' },
       { key: 'discipline_code', label: 'Code', labelKey: 'col_code' },
       { key: 'name', label: 'Name', labelKey: 'col_name' },
       { key: 'description', label: 'Description', labelKey: 'col_description' },
@@ -429,7 +424,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
         },
     ],
     columns: [
-      { key: 'membership_plan_id', label: 'ID', labelKey: 'col_id' },
       { key: 'name', label: 'Name', labelKey: 'col_name' },
       { key: 'price', label: 'Price', labelKey: 'col_price' },
       { key: 'duration_days', label: 'Duration (days)', labelKey: 'col_duration_days' },
@@ -445,7 +439,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           fields: [
             { key: 'description', label: 'Description', labelKey: 'col_description' },
             { key: 'features', label: 'Features', labelKey: 'col_features' },
-            { key: 'membership_plan_id', label: 'ID', labelKey: 'col_id' },
           ],
         },
       ],
@@ -487,7 +480,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
-      { key: 'id', label: 'ID', labelKey: 'col_id' },
       { key: 'title', label: 'Title', labelKey: 'col_title' },
       { key: 'type', label: 'Type', labelKey: 'col_type' },
       { key: 'is_read', label: 'Read', type: 'boolean', labelKey: 'col_read' },
@@ -578,7 +570,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
-      { key: 'slot_id', label: 'ID' },
       { key: 'slot_datetime', label: 'Date & Time', type: 'datetime' },
       { key: 'discipline_name', label: 'Discipline' },
       { key: 'is_available', label: 'Available', type: 'boolean' },
@@ -655,7 +646,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
-      { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
       { key: 'booking_status', label: 'Status', type: 'status', labelKey: 'col_booking_status' },
       { key: 'booking_datetime', label: 'Datetime', type: 'datetime', labelKey: 'col_booking_datetime' },
       { key: 'member.full_name', label: 'Member', labelKey: 'col_member' },
@@ -674,7 +664,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           fields: [
             { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
             { key: 'location.name', label: 'Location', labelKey: 'col_location' },
-            { key: 'booking_id', label: 'ID', labelKey: 'col_id' },
           ],
         },
       ],

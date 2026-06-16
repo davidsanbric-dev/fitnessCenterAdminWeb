@@ -5,9 +5,13 @@
     declarative and each named cell remains independently reusable.
   -->
   <template v-if="variant === 'booking'">
-    <div class="cc">
-      <CrudCellsDateTimeStatusCell :datetime="get('booking_datetime')" :status="get('booking_status')" />
-      <CrudCellsMemberTrainerCell :member="get('member.full_name')" :trainer="get('trainer.full_name')" />
+    <div class="cc cc--split">
+      <div class="cc__cell">
+        <CrudCellsDateTimeStatusCell :datetime="get('booking_datetime')" :status="get('booking_status')" />
+      </div>
+      <div class="cc__cell">
+        <CrudCellsMemberTrainerCell :member="get('member.full_name')" :trainer="get('trainer.full_name')" />
+      </div>
     </div>
   </template>
 

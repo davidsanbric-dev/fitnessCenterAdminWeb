@@ -378,6 +378,28 @@ select {
   justify-items: start;
 }
 
+/* Splits a multi-section card body (e.g. bookings: datetime-status above
+   member-trainer) into separated cells with a divider between them. */
+.cc--split {
+  gap: 0;
+}
+
+.cc--split > .cc__cell {
+  padding: 0.5rem 0;
+}
+
+.cc--split > .cc__cell:first-child {
+  padding-top: 0;
+}
+
+.cc--split > .cc__cell:last-child {
+  padding-bottom: 0;
+}
+
+.cc--split > .cc__cell + .cc__cell {
+  border-top: 1px solid var(--border);
+}
+
 .cc__field {
   display: grid;
   gap: 0.12rem;
