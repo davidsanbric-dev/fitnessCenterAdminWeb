@@ -184,9 +184,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
         ],
         payload: (row, values) => ({
           booking_status: String(values.booking_status || 'CONFIRMED'),
-          location_code: String(
-            (row.location as Record<string, unknown> | undefined)?.location_code || '',
-          ),
           notes: String(values.notes || ''),
         }),
       },
@@ -197,7 +194,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'member.full_name', label: 'Member', labelKey: 'col_member' },
       { key: 'trainer.full_name', label: 'Trainer', labelKey: 'col_trainer' },
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
-      { key: 'location.name', label: 'Location', labelKey: 'col_location' },
     ],
     mobile: {
       variant: 'booking',
@@ -208,7 +204,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           labelKey: 'mobile_view_details',
           fields: [
             { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
-            { key: 'location.name', label: 'Location', labelKey: 'col_location' },
           ],
         },
       ],
@@ -606,9 +601,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
         ],
         payload: (row, values) => ({
           booking_status: String(values.booking_status || 'COMPLETED'),
-          location_code: String(
-            (row.location as Record<string, unknown> | undefined)?.location_code || '',
-          ),
           notes: String(values.notes || ''),
         }),
       },
@@ -618,7 +610,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       { key: 'booking_datetime', label: 'Datetime', type: 'datetime', labelKey: 'col_booking_datetime' },
       { key: 'member.full_name', label: 'Member', labelKey: 'col_member' },
       { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
-      { key: 'location.name', label: 'Location', labelKey: 'col_location' },
     ],
     // Mirrors the admin bookings card. The booking compound cell omits the
     // trainer line here (these are the signed-in trainer's own sessions).
@@ -631,7 +622,6 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
           labelKey: 'mobile_view_details',
           fields: [
             { key: 'class_type.name', label: 'Class Type', labelKey: 'col_class_type' },
-            { key: 'location.name', label: 'Location', labelKey: 'col_location' },
           ],
         },
       ],

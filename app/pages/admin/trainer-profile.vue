@@ -70,7 +70,6 @@ interface TrainerMeProfile {
   bio: string | null
   photo_url: string | null
   certifications: string[]
-  location_id: number | null
   disciplines: Array<{ discipline_id: number; discipline_code: string; discipline_name: string }>
 }
 

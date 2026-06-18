@@ -23,7 +23,6 @@ interface AuthUser {
   profile: {
     first_name: string
     last_name: string
-    location_codes: string[]
   }
 }
 
