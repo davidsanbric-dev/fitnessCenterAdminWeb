@@ -24,6 +24,10 @@
                 v-else-if="column.type === 'status'"
                 :value="resolvePath(row, column.key)"
               />
+              <template v-else-if="column.type === 'image'">
+                <img v-if="imageSrc(resolvePath(row, column.key))" :src="imageSrc(resolvePath(row, column.key))" alt="" class="thumb">
+                <span v-else class="muted">—</span>
+              </template>
               <template v-else>{{ formatValue(resolvePath(row, column.key), column.type) }}</template>
             </td>
             <td v-if="rowActions.length > 0">
@@ -79,6 +83,7 @@
 
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
+import { useRuntimeConfig } from 'nuxt/app'
 import {
   CalendarClock,
   CheckCheck,
@@ -97,7 +102,7 @@ interface CrudColumn {
   key: string
   label: string
   labelKey?: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
+  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status' | 'image'
 }
 
 const props = defineProps<{
@@ -114,6 +119,17 @@ const emit = defineEmits<{
 
 const rowActions = computed(() => props.rowActions || [])
 const { locale } = useLocale()
+
+const apiBaseUrl = String(useRuntimeConfig().public.apiBaseUrl || '')
+
+// Image columns hold a media URL relative to the API base (e.g.
+// "/profile-images/media/3_ab12.webp"); prepend the base to make it fetchable.
+const imageSrc = (value: unknown): string => {
+  const path = typeof value === 'string' ? value.trim() : ''
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${apiBaseUrl}${path}`
+}
 
 const ACTION_ICONS: Record<string, unknown> = {
   Pencil,
@@ -225,3 +241,14 @@ const onMenuSelect = (key: string, row: Record<string, unknown>) => {
   emit('row-action', key, row)
 }
 </script>
+
+<style scoped>
+.thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: block;
+}
+</style>

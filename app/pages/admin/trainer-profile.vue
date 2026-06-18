@@ -31,9 +31,17 @@
         <textarea v-model="form.bio" class="input" rows="3" />
       </label>
 
-      <label style="display: grid; gap: 0.2rem">
-        <small class="muted">{{ t('trainer_profile_photo_url') }}</small>
-        <input v-model="form.photo_url" class="input" type="text">
+      <label style="display: grid; gap: 0.4rem">
+        <small class="muted">{{ t('trainer_profile_photo') }}</small>
+        <img v-if="previewImage" :src="previewImage" alt="" class="photo-preview">
+        <input
+          ref="fileInput"
+          class="input"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          @change="onFileChange"
+        >
+        <small class="muted" style="font-size: 0.72rem">{{ t('trainer_profile_photo_hint') }}</small>
       </label>
 
       <label style="display: grid; gap: 0.2rem">
@@ -50,6 +58,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useRuntimeConfig } from 'nuxt/app'
 import { resolveUiMessage } from '~/config/uiMessages'
 import { useApiClient } from '~/composables/useApiClient'
 
@@ -70,13 +79,42 @@ const toasts = useToasts()
 const { locale } = useLocale()
 const t = (key: string) => resolveUiMessage(key, locale.value)
 
+const config = useRuntimeConfig()
+const apiBaseUrl = String(config.public.apiBaseUrl || '')
+
 const saving = ref(false)
 const form = reactive({
   full_name: '',
   bio: '',
-  photo_url: '',
   certifications_csv: '',
 })
+
+// base64 data URL of a freshly picked photo, or null to keep the current one.
+const photoDataUrl = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const absolutePhotoUrl = (path: string | null | undefined): string => {
+  const value = (path || '').trim()
+  if (!value) return ''
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  return `${apiBaseUrl}${value}`
+}
+
+// Show the freshly picked photo, else the stored one (served media URL).
+const previewImage = computed(() => photoDataUrl.value || absolutePhotoUrl(profile.value?.photo_url))
+
+const onFileChange = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) {
+    photoDataUrl.value = null
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = () => {
+    photoDataUrl.value = typeof reader.result === 'string' ? reader.result : null
+  }
+  reader.readAsDataURL(file)
+}
 
 const { data: profile, pending } = await useAsyncData<TrainerMeProfile>(
   'trainer-me-profile',
@@ -87,7 +125,6 @@ const hydrate = (value: TrainerMeProfile | null) => {
   if (!value) return
   form.full_name = value.full_name || ''
   form.bio = value.bio || ''
-  form.photo_url = value.photo_url || ''
   form.certifications_csv = (value.certifications || []).join(', ')
 }
 
@@ -100,20 +137,29 @@ const disciplineNames = computed(() =>
 const save = async () => {
   saving.value = true
   try {
+    const body: Record<string, unknown> = {
+      full_name: form.full_name.trim(),
+      bio: form.bio.trim() || null,
+      certifications: form.certifications_csv
+        .split(',')
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0),
+    }
+    // Only send the photo when a new one was picked; the server transcodes it to
+    // WebP and derives photo_url from the stored filename.
+    if (photoDataUrl.value) {
+      body.photo_image = photoDataUrl.value
+    }
     const updated = await api.request<TrainerMeProfile>('/trainers/me', {
       method: 'PUT',
-      body: {
-        full_name: form.full_name.trim(),
-        bio: form.bio.trim() || null,
-        photo_url: form.photo_url.trim() || null,
-        certifications: form.certifications_csv
-          .split(',')
-          .map((item) => item.trim())
-          .filter((item) => item.length > 0),
-      },
+      body,
     })
     profile.value = updated
     hydrate(updated)
+    photoDataUrl.value = null
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
     toasts.pushSuccess(t('trainer_profile_save_success'))
   } catch {
     toasts.pushError(t('trainer_profile_save_error'))
@@ -127,5 +173,14 @@ const save = async () => {
 .readonly-row {
   display: grid;
   gap: 0.2rem;
+}
+
+.photo-preview {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: block;
 }
 </style>

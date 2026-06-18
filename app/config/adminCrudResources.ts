@@ -2,7 +2,7 @@ export interface CrudColumn {
   key: string
   label: string
   labelKey?: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
+  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status' | 'image'
 }
 
 /** A single field surfaced inside a mobile "view details" dialog. */
@@ -233,6 +233,7 @@ export const adminCrudResources: Record<string, CrudResourceConfig> = {
       },
     ],
     columns: [
+      { key: 'photo_url', label: 'Image', labelKey: 'col_image', type: 'image' },
       { key: 'full_name', label: 'Name', labelKey: 'col_name' },
       { key: 'discipline_name', label: 'Discipline', labelKey: 'col_discipline' },
       { key: 'bio', label: 'Bio', labelKey: 'col_bio' },
