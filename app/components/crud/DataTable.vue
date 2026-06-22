@@ -83,7 +83,6 @@
 
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
-import { useRuntimeConfig } from 'nuxt/app'
 import {
   CalendarClock,
   CheckCheck,
@@ -95,15 +94,10 @@ import {
 
 import type { MoreActionItem } from '~/components/crud/MoreActionsMenu.vue'
 import type { DetailField } from '~/components/crud/RowDetailsDialog.vue'
-import type { MobileCellConfig } from '~/config/adminCrudResources'
-import { resolveUiMessage } from '~/config/uiMessages'
-
-interface CrudColumn {
-  key: string
-  label: string
-  labelKey?: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status' | 'image'
-}
+import type { CrudColumn, MobileCellConfig } from '~/config/adminCrudResources'
+import { useT } from '~/composables/useT'
+import { getByPath } from '~/utils/objectPath'
+import { useMediaUrl } from '~/composables/useMediaUrl'
 
 const props = defineProps<{
   columns: CrudColumn[]
@@ -118,18 +112,11 @@ const emit = defineEmits<{
 }>()
 
 const rowActions = computed(() => props.rowActions || [])
-const { locale } = useLocale()
-
-const apiBaseUrl = String(useRuntimeConfig().public.apiBaseUrl || '')
 
 // Image columns hold a media URL relative to the API base (e.g.
-// "/profile-images/media/3_ab12.webp"); prepend the base to make it fetchable.
-const imageSrc = (value: unknown): string => {
-  const path = typeof value === 'string' ? value.trim() : ''
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  return `${apiBaseUrl}${path}`
-}
+// "/profile-images/media/3_ab12.webp"); resolve it to a fetchable absolute URL.
+const mediaUrl = useMediaUrl()
+const imageSrc = (value: unknown): string => mediaUrl(typeof value === 'string' ? value : '')
 
 const ACTION_ICONS: Record<string, unknown> = {
   Pencil,
@@ -153,17 +140,9 @@ const actionVariantClass = (key: string) => {
   if (key.includes('mark_read')) return 'btn-success'
   return ''
 }
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 
-const resolvePath = (row: Record<string, unknown>, path: string): unknown => {
-  return path.split('.').reduce<unknown>((current, key) => {
-    if (current && typeof current === 'object') {
-      return (current as Record<string, unknown>)[key]
-    }
-
-    return undefined
-  }, row)
-}
+const resolvePath = getByPath
 
 const formatValue = (value: unknown, type: CrudColumn['type']) => {
   if (value === null || value === undefined || value === '') {
@@ -191,7 +170,7 @@ const menuItemsFor = (): MoreActionItem[] => {
   for (const view of props.mobile?.detailViews || []) {
     items.push({
       key: `${DETAIL_PREFIX}${view.key}`,
-      label: view.labelKey ? resolveUiMessage(view.labelKey, locale.value) : view.label,
+      label: view.labelKey ? t(view.labelKey) : view.label,
       icon: Eye,
     })
   }
@@ -218,10 +197,10 @@ const openDetails = (viewKey: string, row: Record<string, unknown>) => {
   const view = (props.mobile?.detailViews || []).find((item) => item.key === viewKey)
   if (!view) return
 
-  details.title = view.labelKey ? resolveUiMessage(view.labelKey, locale.value) : view.label
+  details.title = view.labelKey ? t(view.labelKey) : view.label
   details.fields = view.fields.map((field) => ({
     key: field.key,
-    label: field.labelKey ? resolveUiMessage(field.labelKey, locale.value) : field.label,
+    label: field.labelKey ? t(field.labelKey) : field.label,
     value: resolvePath(row, field.key),
     type: field.type,
   }))

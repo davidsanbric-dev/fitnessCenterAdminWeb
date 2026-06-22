@@ -98,7 +98,7 @@ import { z } from 'zod'
 
 import type { ActionFormField } from '~/components/crud/ActionFormDialog.vue'
 
-import type { CrudColumn, CrudResourceConfig } from '~/config/adminCrudResources'
+import type { CrudAction, CrudColumn, CrudResourceConfig } from '~/config/adminCrudResources'
 
 import { isTextFilter } from '~/config/adminCrudResources'
 
@@ -106,6 +106,8 @@ import { resolveToastMessage } from '~/config/toastMessages'
 import { resolveUiMessage } from '~/config/uiMessages'
 import { useApiClient } from '~/composables/useApiClient'
 import { useNotificationsFeed } from '~/composables/useNotificationsFeed'
+import { getByPath } from '~/utils/objectPath'
+import { extractDetail } from '~/utils/httpError'
 
 const props = defineProps<{
   config: CrudResourceConfig
@@ -179,13 +181,17 @@ const actionState = reactive({
   formInitialValues: {} as Record<string, string | number>,
 })
 
-const selectedAction = computed(() => {
-  if (props.config.createAction && props.config.createAction.key === actionState.selectedActionKey) {
+// Resolve an action by key across the create action and the row actions — the
+// two places a CrudAction can be declared on a resource.
+const findAction = (key: string): CrudAction | null => {
+  if (props.config.createAction && props.config.createAction.key === key) {
     return props.config.createAction
   }
 
-  return (props.config.rowActions || []).find((item) => item.key === actionState.selectedActionKey) || null
-})
+  return (props.config.rowActions || []).find((item) => item.key === key) || null
+}
+
+const selectedAction = computed(() => findAction(actionState.selectedActionKey))
 
 const selectedActionFormFields = computed<ActionFormField[]>(() => {
   const hasFields = (selectedAction.value as { formFields?: ActionFormField[] })?.formFields
@@ -200,15 +206,7 @@ const resolvePathPlaceholders = (template: string, row: Record<string, unknown>)
   })
 }
 
-const resolvePathValue = (row: Record<string, unknown>, path: string): unknown => {
-  return path.split('.').reduce<unknown>((current, key) => {
-    if (current && typeof current === 'object') {
-      return (current as Record<string, unknown>)[key]
-    }
-
-    return undefined
-  }, row)
-}
+const resolvePathValue = getByPath
 
 const interpolateMessageTemplate = (
   template: string,
@@ -321,20 +319,14 @@ const resolveSuccessMessage = (
 }
 
 const extractErrorMessage = (error: unknown) => {
-  if (error && typeof error === 'object') {
-    const asRecord = error as Record<string, unknown>
+  const detail = extractDetail(error)
+  if (detail && detail.trim().length > 0) {
+    return detail
+  }
 
-    const data = asRecord.data
-    if (data && typeof data === 'object') {
-      const dataRecord = data as Record<string, unknown>
-      if (typeof dataRecord.detail === 'string' && dataRecord.detail.trim().length > 0) {
-        return dataRecord.detail
-      }
-
-      if (typeof dataRecord.message === 'string' && dataRecord.message.trim().length > 0) {
-        return dataRecord.message
-      }
-    }
+  const message = (error as { data?: { message?: string } })?.data?.message
+  if (typeof message === 'string' && message.trim().length > 0) {
+    return message
   }
 
   if (error instanceof Error) {
@@ -397,10 +389,7 @@ const toFieldInitialValue = (value: unknown): string | number => {
 }
 
 const openActionFlow = (actionKey: string, row: Record<string, unknown>) => {
-  const action =
-    (props.config.createAction && props.config.createAction.key === actionKey
-      ? props.config.createAction
-      : (props.config.rowActions || []).find((item) => item.key === actionKey)) || null
+  const action = findAction(actionKey)
 
   if (!action) {
     return
@@ -623,10 +612,7 @@ watch(
   () => locale.value,
   () => {
     // Re-resolve dialog strings when locale switches so open dialogs update live.
-    const action =
-      (props.config.createAction && props.config.createAction.key === actionState.selectedActionKey
-        ? props.config.createAction
-        : (props.config.rowActions || []).find((item) => item.key === actionState.selectedActionKey)) || null
+    const action = findAction(actionState.selectedActionKey)
 
     if (action) {
       const resolvedLabel: string = action.labelKey

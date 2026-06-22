@@ -1,5 +1,5 @@
 {
-  "name": "project_web_app",
+  "name": "fitnesscenter_web",
   "type": "module",
   "private": true,
   "packageManager": "bun@1.2.12",

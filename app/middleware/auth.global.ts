@@ -27,7 +27,7 @@ export default defineNuxtRouteMiddleware((to) => {
     }
 
     // A trainer can reach only its own modules; bounce other /admin routes home.
-    if (auth.isTrainer.value && !auth.isAdmin.value && !trainerAllowedPaths.includes(to.path)) {
+    if (auth.isTrainerOnly.value && !trainerAllowedPaths.includes(to.path)) {
       return navigateTo('/admin/home')
     }
   }

@@ -32,6 +32,45 @@ export interface MobileCellConfig {
   detailViews?: MobileDetailView[]
 }
 
+/** A single input rendered inside an action's confirm/create form dialog. */
+export interface CrudActionField {
+  key: string
+  label: string
+  labelKey?: string
+  type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
+  required?: boolean
+  requiredWhen?: (values: Record<string, string | number>) => boolean
+  placeholder?: string
+  placeholderKey?: string
+  options?: Array<{ label: string; value: string; labelKey?: string }>
+  defaultValue?: string | number
+  fromRowPath?: string
+}
+
+/**
+ * A create or per-row action: the HTTP call it issues, the dialog copy around
+ * it, and the optional form it collects before confirming. `createAction` and
+ * each `rowActions` entry share this exact shape.
+ */
+export interface CrudAction {
+  key: string
+  label: string
+  labelKey?: string
+  method: 'PATCH' | 'POST' | 'PUT' | 'DELETE'
+  pathTemplate: string
+  confirmMessage?: string
+  confirmMessageKey?: string
+  successMessageKey?: string
+  successMessage?: string | ((row: Record<string, unknown>, values: Record<string, string | number>) => string)
+  errorMessageKey?: string
+  errorMessage?: string | ((row: Record<string, unknown>, values: Record<string, string | number>, error: unknown) => string)
+  formFields?: CrudActionField[]
+  payload: (
+    row: Record<string, unknown>,
+    values: Record<string, string | number>,
+  ) => Record<string, unknown>
+}
+
 export interface CrudResourceConfig {
   title: string
   titleKey?: string
@@ -53,66 +92,8 @@ export interface CrudResourceConfig {
     type: 'text' | 'select'
     options?: Array<{ label: string; value: string; labelKey?: string }>
   }>
-  createAction?: {
-    key: string
-    label: string
-    labelKey?: string
-    method: 'PATCH' | 'POST' | 'PUT' | 'DELETE'
-    pathTemplate: string
-    confirmMessage?: string
-    confirmMessageKey?: string
-    successMessageKey?: string
-    successMessage?: string | ((row: Record<string, unknown>, values: Record<string, string | number>) => string)
-    errorMessageKey?: string
-    errorMessage?: string | ((row: Record<string, unknown>, values: Record<string, string | number>, error: unknown) => string)
-    formFields?: Array<{
-      key: string
-      label: string
-      labelKey?: string
-      type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
-      required?: boolean
-      requiredWhen?: (values: Record<string, string | number>) => boolean
-      placeholder?: string
-      placeholderKey?: string
-      options?: Array<{ label: string; value: string; labelKey?: string }>
-      defaultValue?: string | number
-      fromRowPath?: string
-    }>
-    payload: (
-      row: Record<string, unknown>,
-      values: Record<string, string | number>,
-    ) => Record<string, unknown>
-  }
-  rowActions?: Array<{
-    key: string
-    label: string
-    labelKey?: string
-    method: 'PATCH' | 'POST' | 'PUT' | 'DELETE'
-    pathTemplate: string
-    confirmMessage?: string
-    confirmMessageKey?: string
-    successMessageKey?: string
-    successMessage?: string | ((row: Record<string, unknown>, values: Record<string, string | number>) => string)
-    errorMessageKey?: string
-    errorMessage?: string | ((row: Record<string, unknown>, values: Record<string, string | number>, error: unknown) => string)
-    formFields?: Array<{
-      key: string
-      label: string
-      labelKey?: string
-      type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
-      required?: boolean
-      requiredWhen?: (values: Record<string, string | number>) => boolean
-      placeholder?: string
-      placeholderKey?: string
-      options?: Array<{ label: string; value: string; labelKey?: string }>
-      defaultValue?: string | number
-      fromRowPath?: string
-    }>
-    payload: (
-      row: Record<string, unknown>,
-      values: Record<string, string | number>,
-    ) => Record<string, unknown>
-  }>
+  createAction?: CrudAction
+  rowActions?: CrudAction[]
   columns: CrudColumn[]
   // Optional responsive layout: when set, narrow viewports render compound row
   // cells + a more-actions menu instead of the horizontally-scrolling table.

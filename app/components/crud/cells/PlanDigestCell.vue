@@ -20,12 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 
 defineProps<{ name: unknown; price: unknown; durationDays: unknown; maxBookings: unknown }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 const text = (value: unknown) => (value === null || value === undefined || value === '' ? '—' : String(value))
 </script>
 

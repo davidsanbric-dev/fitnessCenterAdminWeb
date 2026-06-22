@@ -58,11 +58,6 @@ export const useCrudResource = (
         rows.value = response.items
         total.value = response.total || response.items.length
         page.value = response.page || targetPage
-      } else if (Array.isArray((response as unknown as { items: Array<Record<string, unknown>> }).items)) {
-        const fallback = response as unknown as { items: Array<Record<string, unknown>> }
-        rows.value = fallback.items
-        total.value = fallback.items.length
-        page.value = 1
       } else if (Array.isArray(response as unknown as Array<Record<string, unknown>>)) {
         const fallbackArray = response as unknown as Array<Record<string, unknown>>
         rows.value = fallbackArray

@@ -67,23 +67,14 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
+import type { CrudActionField } from '~/config/adminCrudResources'
 
-export interface ActionFormField {
-  key: string
-  label: string
-  labelKey?: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'datetime'
-  required?: boolean
-  // Conditional requirement evaluated against the live form values, e.g. notes
-  // become mandatory only when booking_status is COMPLETED. Treated like
-  // `required` at submit-time when the predicate returns true.
-  requiredWhen?: (values: Record<string, string | number>) => boolean
-  placeholder?: string
-  placeholderKey?: string
-  options?: Array<{ label: string; value: string; labelKey?: string }>
-  defaultValue?: string | number
-}
+// The dialog renders the same field shape the resource config declares. Kept as
+// a re-export so existing `ActionFormField` importers (ResourceCrudPage) are
+// unaffected. `requiredWhen` makes a field mandatory only when its predicate
+// holds (e.g. notes become required once booking_status is COMPLETED).
+export type ActionFormField = CrudActionField
 
 const props = defineProps<{
   open: boolean
@@ -121,14 +112,18 @@ const setValue = (key: string, value: string) => {
 // datetime-local requires "YYYY-MM-DDTHH:MM" — strip seconds/timezone if present
 const toDatetimeLocalValue = (v: string) => v.slice(0, 16)
 
-// Recomputed each time the dialog opens so "now" stays accurate
-const nowDatetimeLocal = computed(() => toDatetimeLocalValue(new Date().toISOString()))
+// "now" as a datetime-local string in the user's LOCAL wall-clock time. Shifting
+// by the timezone offset before toISOString() avoids the min being off by the
+// UTC offset (which would otherwise wrongly block or allow near-now slots).
+const nowDatetimeLocal = computed(() => {
+  const now = new Date()
+  return toDatetimeLocalValue(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString())
+})
 
 defineEmits<{
   cancel: []
   submit: [values: Record<string, string | number>]
 }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 </script>

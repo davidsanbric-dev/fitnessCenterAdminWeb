@@ -15,12 +15,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 
 const props = defineProps<{ member: unknown; trainer?: unknown }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 const text = (value: unknown) => (value === null || value === undefined || value === '' ? '—' : String(value))
 const hasTrainer = computed(
   () => props.trainer !== null && props.trainer !== undefined && props.trainer !== '',

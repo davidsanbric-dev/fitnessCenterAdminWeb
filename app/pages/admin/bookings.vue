@@ -12,7 +12,7 @@ const auth = useAuth()
 // Trainers see a read-only, self-scoped bookings view; staff get the full admin
 // bookings module with status actions.
 const resourceConfig = computed(() =>
-  auth.isTrainer.value && !auth.isAdmin.value
+  auth.isTrainerOnly.value
     ? adminCrudResources.trainerBookings!
     : adminCrudResources.bookings!,
 )

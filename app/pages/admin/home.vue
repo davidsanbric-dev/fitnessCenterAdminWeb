@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 import { useAuth } from '~/composables/useAuth'
 
 interface AdminHomeResponse {
@@ -74,10 +74,9 @@ interface TrainerDashboardResponse {
 
 const api = useApiClient()
 const auth = useAuth()
-const { locale } = useLocale()
 
-const t = (key: string) => resolveUiMessage(key, locale.value)
-const isTrainerHome = computed(() => auth.isTrainer.value && !auth.isAdmin.value)
+const t = useT()
+const isTrainerHome = auth.isTrainerOnly
 
 const { data: adminDashboard } = await useAsyncData<AdminHomeResponse | null>(
   'admin-home-dashboard',

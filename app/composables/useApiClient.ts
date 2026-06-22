@@ -3,22 +3,13 @@ import {
 } from 'nuxt/app'
 
 import { useAuth } from './useAuth'
+import { extractDetail, extractStatus } from '~/utils/httpError'
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   query?: Record<string, string | number | boolean | undefined>
   body?: unknown
   requiresAuth?: boolean
-}
-
-const extractStatus = (error: unknown): number | undefined => {
-  const err = error as { status?: number; statusCode?: number; response?: { status?: number } }
-  return err?.status ?? err?.statusCode ?? err?.response?.status
-}
-
-const extractDetail = (error: unknown): string | undefined => {
-  const err = error as { data?: { detail?: string }; response?: { _data?: { detail?: string } } }
-  return err?.data?.detail ?? err?.response?._data?.detail
 }
 
 export const useApiClient = () => {

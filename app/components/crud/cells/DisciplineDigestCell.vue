@@ -18,12 +18,11 @@
 
 <script setup lang="ts">
 import { Users } from 'lucide-vue-next'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 
 defineProps<{ name: unknown; description?: unknown; trainersCount?: unknown; code?: unknown }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 const text = (value: unknown) => (value === null || value === undefined || value === '' ? '—' : String(value))
 </script>
 

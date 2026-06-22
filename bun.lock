@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "project_web_app",
+      "name": "fitnesscenter_web",
       "dependencies": {
         "@tanstack/vue-table": "^8.21.3",
         "firebase": "^12.4.0",

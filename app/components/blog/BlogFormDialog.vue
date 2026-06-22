@@ -65,7 +65,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 
 import { renderMarkdown } from '~/composables/useMarkdown'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 
 export interface BlogFormValues {
   title: string
@@ -91,8 +91,7 @@ const emit = defineEmits<{
   submit: [values: BlogFormValues]
 }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 
 const form = reactive({ title: '', text: '' })
 const heroDataUrl = ref<string | null>(null)

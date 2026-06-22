@@ -47,16 +47,12 @@
 </template>
 
 <script setup lang="ts">
+import { getByPath } from '~/utils/objectPath'
+
 const props = defineProps<{
   variant: 'booking' | 'trainer' | 'discipline' | 'plan' | 'slot'
   row: Record<string, unknown>
 }>()
 
-const get = (path: string): unknown =>
-  path.split('.').reduce<unknown>((current, key) => {
-    if (current && typeof current === 'object') {
-      return (current as Record<string, unknown>)[key]
-    }
-    return undefined
-  }, props.row)
+const get = (path: string): unknown => getByPath(props.row, path)
 </script>

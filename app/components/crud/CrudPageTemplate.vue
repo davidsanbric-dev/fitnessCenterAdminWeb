@@ -30,13 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import { resolveUiMessage } from '~/config/uiMessages'
-
-interface CrudColumn {
-  key: string
-  label: string
-  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
-}
+import { useT } from '~/composables/useT'
+import type { CrudColumn } from '~/config/adminCrudResources'
 
 defineProps<{
   title: string
@@ -53,6 +48,5 @@ defineEmits<{
   'change-page': [page: number]
 }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 </script>

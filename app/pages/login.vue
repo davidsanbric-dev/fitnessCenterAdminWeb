@@ -25,6 +25,7 @@
 import { z } from 'zod'
 
 import { useAuth } from '~/composables/useAuth'
+import { extractDetail, extractStatus } from '~/utils/httpError'
 import AppLogo from '@/components/icons/AppLogo.vue'
 
 const auth = useAuth()
@@ -38,14 +39,9 @@ const schema = z.object({
   password: z.string().min(6),
 })
 
-const backendDetail = (err: unknown): string | undefined => {
-  const e = err as { data?: { detail?: string }; response?: { _data?: { detail?: string } } }
-  return e?.data?.detail ?? e?.response?._data?.detail
-}
-
 const mapError = (err: unknown): string => {
   // Backend response detail (spec §6) takes priority for protected-call failures.
-  const detail = backendDetail(err)
+  const detail = extractDetail(err)
   if (detail === 'User authenticated with Firebase but not provisioned in backend') {
     return 'This account is not provisioned for admin access. Contact support.'
   }
@@ -68,9 +64,7 @@ const mapError = (err: unknown): string => {
   }
 
   // HTTP status fallback — prevents raw fetch error strings (e.g. "[POST] "...": 403") leaking to the UI.
-  const status = (err as { status?: number; statusCode?: number; response?: { status?: number } })?.status
-    ?? (err as { statusCode?: number })?.statusCode
-    ?? (err as { response?: { status?: number } })?.response?.status
+  const status = extractStatus(err)
   if (status === 403 || status === 401) {
     return 'Invalid email or password.'
   }

@@ -58,9 +58,9 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { useRuntimeConfig } from 'nuxt/app'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 import { useApiClient } from '~/composables/useApiClient'
+import { useMediaUrl } from '~/composables/useMediaUrl'
 
 interface TrainerMeProfile {
   trainer_id: number
@@ -75,11 +75,9 @@ interface TrainerMeProfile {
 
 const api = useApiClient()
 const toasts = useToasts()
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 
-const config = useRuntimeConfig()
-const apiBaseUrl = String(config.public.apiBaseUrl || '')
+const mediaUrl = useMediaUrl()
 
 const saving = ref(false)
 const form = reactive({
@@ -92,15 +90,8 @@ const form = reactive({
 const photoDataUrl = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const absolutePhotoUrl = (path: string | null | undefined): string => {
-  const value = (path || '').trim()
-  if (!value) return ''
-  if (value.startsWith('http://') || value.startsWith('https://')) return value
-  return `${apiBaseUrl}${value}`
-}
-
 // Show the freshly picked photo, else the stored one (served media URL).
-const previewImage = computed(() => photoDataUrl.value || absolutePhotoUrl(profile.value?.photo_url))
+const previewImage = computed(() => photoDataUrl.value || mediaUrl(profile.value?.photo_url))
 
 const onFileChange = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -120,7 +111,7 @@ const { data: profile, pending } = await useAsyncData<TrainerMeProfile>(
   () => api.get<TrainerMeProfile>('/trainers/me'),
 )
 
-const hydrate = (value: TrainerMeProfile | null) => {
+const hydrate = (value: TrainerMeProfile | null | undefined) => {
   if (!value) return
   form.full_name = value.full_name || ''
   form.bio = value.bio || ''

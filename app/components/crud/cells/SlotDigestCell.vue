@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 
 const props = defineProps<{
   datetime: unknown
@@ -24,8 +24,7 @@ const props = defineProps<{
   scheduleType?: unknown
 }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 const available = computed(() => props.isAvailable === true || String(props.isAvailable) === 'true')
 </script>
 

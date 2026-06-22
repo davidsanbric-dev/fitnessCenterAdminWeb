@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 import { Home, Calendar, User, Dumbbell, CreditCard, Bell, Newspaper, CalendarClock, IdCard } from 'lucide-vue-next'
 import AppLogo from '../icons/AppLogo.vue'
 import { useSidebar } from '~/composables/useSidebar'
@@ -63,7 +63,7 @@ const { isOpen, closeSidebar } = useSidebar()
 const auth = useAuth()
 const { unreadCount } = useNotificationsFeed()
 
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 const themeLabel = computed(() => (theme.value === 'dark' ? t('theme_switch_light') : t('theme_switch_dark')))
 
 const adminNavItems = [
@@ -85,7 +85,7 @@ const trainerNavItems = [
 ]
 
 const navItems = computed(() =>
-  auth.isTrainer.value && !auth.isAdmin.value ? trainerNavItems : adminNavItems,
+  auth.isTrainerOnly.value ? trainerNavItems : adminNavItems,
 )
 </script>
 

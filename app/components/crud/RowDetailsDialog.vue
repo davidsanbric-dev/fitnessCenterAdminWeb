@@ -29,7 +29,9 @@ export interface DetailField {
   key: string
   label: string
   value: unknown
-  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status'
+  // Mirrors a column type; 'image' is accepted for assignment compatibility but
+  // detail rows render every non-date/status value through format() as text.
+  type?: 'text' | 'date' | 'datetime' | 'boolean' | 'status' | 'image'
 }
 
 defineProps<{ open: boolean; title: string; fields: DetailField[]; closeLabel: string }>()

@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useT } from '~/composables/useT'
 
 defineProps<{
   open: boolean
@@ -30,6 +30,5 @@ defineEmits<{
   confirm: []
 }>()
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 </script>

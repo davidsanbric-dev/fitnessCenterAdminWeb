@@ -47,6 +47,9 @@ export const useAuth = () => {
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
   const isAdmin = computed(() => ['admin', 'manager'].includes(user.value?.role || ''))
   const isTrainer = computed(() => user.value?.role === 'trainer')
+  // A trainer with no admin/manager rights: scoped to its own modules (home,
+  // slots, bookings, profile). Drives trainer-vs-admin branching in the shell.
+  const isTrainerOnly = computed(() => isTrainer.value && !isAdmin.value)
   // Both staff (admin/manager) and trainers sign into the web app; they differ
   // only in which modules they are scoped to (see auth.global middleware).
   const canAccessWeb = computed(() => isAdmin.value || isTrainer.value)
@@ -131,7 +134,7 @@ export const useAuth = () => {
 
       if (!firebaseApiKey || !firebaseAuthDomain || !firebaseProjectId || !firebaseAppId) {
         throw new Error(
-          'Firebase web config is missing. Set NUXT_PUBLIC_FIREBASE_API_KEY, NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NUXT_PUBLIC_FIREBASE_PROJECT_ID, and NUXT_PUBLIC_FIREBASE_APP_ID in project_web_app/.env and restart the dev server.',
+          'Firebase web config is missing. Set NUXT_PUBLIC_FIREBASE_API_KEY, NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NUXT_PUBLIC_FIREBASE_PROJECT_ID, and NUXT_PUBLIC_FIREBASE_APP_ID in fitnesscenter_web/.env and restart the dev server.',
         )
       }
 
@@ -220,19 +223,9 @@ export const useAuth = () => {
   /**
    * Handle an invalidated session (revoked/invalid token): drop local state and
    * route to login. Used by the API client when the backend rejects the token.
+   * Same teardown as a user-initiated logout.
    */
-  const handleSessionExpired = async () => {
-    if (typeof window !== 'undefined') {
-      try {
-        await signOut(getFirebaseAuthClient())
-      } catch {
-        // Ignore; clearing local state is what matters.
-      }
-    }
-
-    clearAuth()
-    await navigateTo('/login')
-  }
+  const handleSessionExpired = logout
 
   /**
    * Keep the app token in sync with the Firebase SDK after a page reload, and
@@ -261,6 +254,7 @@ export const useAuth = () => {
     isAuthenticated,
     isAdmin,
     isTrainer,
+    isTrainerOnly,
     canAccessWeb,
     hydrateFromStorage,
     isTokenExpired,

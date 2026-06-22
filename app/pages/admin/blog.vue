@@ -119,14 +119,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRuntimeConfig } from 'nuxt/app'
 import { Pencil, Trash2 } from 'lucide-vue-next'
 
 import type { BlogFormValues } from '~/components/blog/BlogFormDialog.vue'
 import type { MoreActionItem } from '~/components/crud/MoreActionsMenu.vue'
 import { useApiClient } from '~/composables/useApiClient'
 import { useCrudResource } from '~/composables/useCrudResource'
-import { resolveUiMessage } from '~/config/uiMessages'
+import { useMediaUrl } from '~/composables/useMediaUrl'
+import { useT } from '~/composables/useT'
+import { extractDetail } from '~/utils/httpError'
 
 interface BlogRow extends Record<string, unknown> {
   id: number
@@ -136,11 +137,9 @@ interface BlogRow extends Record<string, unknown> {
   created_at: string
 }
 
-const { locale } = useLocale()
-const t = (key: string) => resolveUiMessage(key, locale.value)
+const t = useT()
 
-const config = useRuntimeConfig()
-const apiBaseUrl = String(config.public.apiBaseUrl || '')
+const mediaUrl = useMediaUrl()
 const api = useApiClient()
 const toasts = useToasts()
 const resource = useCrudResource('/blog', { requiresAuth: true })
@@ -159,7 +158,7 @@ onMounted(() => {
   resource.fetchPage(1)
 })
 
-const imageSrc = (row: BlogRow) => (row.hero_image_url ? `${apiBaseUrl}${row.hero_image_url}` : '')
+const imageSrc = (row: BlogRow) => mediaUrl(row.hero_image_url)
 
 // Mobile more-actions menu mirrors the desktop edit/delete icon buttons.
 const blogMenuItems = computed<MoreActionItem[]>(() => [
@@ -258,11 +257,8 @@ const confirmDelete = async () => {
 }
 
 const extractError = (error: unknown, fallback: string): string => {
-  const data = (error as { data?: { detail?: string } })?.data
-  if (data && typeof data.detail === 'string' && data.detail.trim().length > 0) {
-    return data.detail
-  }
-  return fallback
+  const detail = extractDetail(error)
+  return detail && detail.trim().length > 0 ? detail : fallback
 }
 </script>
 
