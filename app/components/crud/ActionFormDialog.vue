@@ -68,7 +68,7 @@
 import { computed, reactive, watch } from 'vue'
 
 import { useT } from '~/composables/useT'
-import type { CrudActionField } from '~/config/adminCrudResources'
+import type { CrudActionField } from '~/config/crudResources'
 
 // The dialog renders the same field shape the resource config declares. Kept as
 // a re-export so existing `ActionFormField` importers (ResourceCrudPage) are

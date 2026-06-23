@@ -98,9 +98,9 @@ import { z } from 'zod'
 
 import type { ActionFormField } from '~/components/crud/ActionFormDialog.vue'
 
-import type { CrudAction, CrudColumn, CrudResourceConfig } from '~/config/adminCrudResources'
+import type { CrudAction, CrudColumn, CrudResourceConfig } from '~/config/crudResources'
 
-import { isTextFilter } from '~/config/adminCrudResources'
+import { isTextFilter } from '~/config/crudResources'
 
 import { resolveToastMessage } from '~/config/toastMessages'
 import { resolveUiMessage } from '~/config/uiMessages'

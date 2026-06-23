@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { adminCrudResources } from '~/config/adminCrudResources'
+import { adminCrudResources } from '~/config/crudResources'
 import { useAuth } from '~/composables/useAuth'
 
 const auth = useAuth()

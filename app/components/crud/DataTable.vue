@@ -94,7 +94,7 @@ import {
 
 import type { MoreActionItem } from '~/components/crud/MoreActionsMenu.vue'
 import type { DetailField } from '~/components/crud/RowDetailsDialog.vue'
-import type { CrudColumn, MobileCellConfig } from '~/config/adminCrudResources'
+import type { CrudColumn, MobileCellConfig } from '~/config/crudResources'
 import { useT } from '~/composables/useT'
 import { getByPath } from '~/utils/objectPath'
 import { useMediaUrl } from '~/composables/useMediaUrl'

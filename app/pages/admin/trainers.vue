@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { adminCrudResources } from '~/config/adminCrudResources'
+import { adminCrudResources } from '~/config/crudResources'
 
 const resourceConfig = adminCrudResources.trainers!
 </script>

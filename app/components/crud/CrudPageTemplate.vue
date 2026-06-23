@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { useT } from '~/composables/useT'
-import type { CrudColumn } from '~/config/adminCrudResources'
+import type { CrudColumn } from '~/config/crudResources'
 
 defineProps<{
   title: string
