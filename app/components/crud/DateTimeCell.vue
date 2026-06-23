@@ -26,6 +26,32 @@ const props = withDefaults(
 
 const { locale } = useLocale()
 
+// Constructing an Intl.DateTimeFormat is comparatively expensive, and this cell
+// renders once per datetime column per row (and re-renders on every background
+// poll). Cache the date/time formatters per locale tag at module scope so the
+// whole table reuses two instances instead of allocating a fresh pair per cell.
+const dateTimeFormatters = new Map<string, { date: Intl.DateTimeFormat; time: Intl.DateTimeFormat }>()
+
+const formattersFor = (localeTag: string) => {
+  let formatters = dateTimeFormatters.get(localeTag)
+  if (!formatters) {
+    formatters = {
+      date: new Intl.DateTimeFormat(localeTag, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      time: new Intl.DateTimeFormat(localeTag, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    }
+    dateTimeFormatters.set(localeTag, formatters)
+  }
+  return formatters
+}
+
 const fallback = computed(() => {
   if (props.value === null || props.value === undefined || props.value === '') {
     return '-'
@@ -45,18 +71,11 @@ const parsed = computed(() => {
   }
 
   const localeTag = locale.value === 'es' ? 'es-ES' : 'en-US'
+  const formatters = formattersFor(localeTag)
 
   return {
-    date: new Intl.DateTimeFormat(localeTag, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(date),
-    time: new Intl.DateTimeFormat(localeTag, {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(date),
+    date: formatters.date.format(date),
+    time: formatters.time.format(date),
     title: date.toLocaleString(localeTag),
   }
 })

@@ -62,8 +62,8 @@
           <CrudCompoundRowCell :variant="mobile.variant" :row="row" />
         </div>
         <CrudMoreActionsMenu
-          v-if="menuItemsFor().length > 0"
-          :items="menuItemsFor()"
+          v-if="menuItems.length > 0"
+          :items="menuItems"
           :label="t('mobile_more_actions')"
           :disabled="Boolean(props.actionsDisabled)"
           @select="(key) => onMenuSelect(key, row)"
@@ -164,7 +164,10 @@ const formatValue = (value: unknown, type: CrudColumn['type']) => {
 // to the parent unchanged (so the existing confirm/form flow is reused).
 const DETAIL_PREFIX = 'view:'
 
-const menuItemsFor = (): MoreActionItem[] => {
+// The detail-view + row-action menu is identical for every row (it depends only
+// on the resource config, not the row), so build it once and share it across all
+// mobile cards instead of rebuilding an array per card on each render.
+const menuItems = computed<MoreActionItem[]>(() => {
   const items: MoreActionItem[] = []
 
   for (const view of props.mobile?.detailViews || []) {
@@ -185,7 +188,7 @@ const menuItemsFor = (): MoreActionItem[] => {
   }
 
   return items
-}
+})
 
 const details = reactive<{ open: boolean; title: string; fields: DetailField[] }>({
   open: false,
